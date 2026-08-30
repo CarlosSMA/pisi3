@@ -1,17 +1,14 @@
 import os
 
-def read_csv_data():
-    files = os.listdir('./data')
-    csv_files = []
+import pandas as pd
+import streamlit as st
 
-    for file in files:
-        if file.endswith('.csv'):
-            csv_files.append(file)
-
-    print(csv_files)
 
 def main():
-    read_csv_data()
+    st.html('''
+    <h1>Análise de casos de Dengue, Zika e Chikungunya entre 2023 e 2025</h1>
+    ''')
+
 
 if __name__ == "__main__":
     main()
