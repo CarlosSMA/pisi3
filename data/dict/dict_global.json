@@ -1,0 +1,635 @@
+﻿{
+    "metadados":  {
+                      "cabecalho":  {
+                                        "titulo":  "DicionÃ¡rio global dos casos de Dengue, Zika e Chikungunya",
+                                        "descricao":  "UniÃ£o dos campos documentados e observados nos arquivos CSV de Dengue, Zika e Chikungunya.",
+                                        "categoria_vcge":  "http://vocab.e.gov.br/2011/03/vcge#saude",
+                                        "fonte_dados":  "http://dados.recife.pe.gov.br",
+                                        "licenca":  "Open Database License (ODbL)",
+                                        "responsavel_dados":  "Secretaria de SaÃºde",
+                                        "responsavel_disponibilizar":  "Emprel",
+                                        "frequencia_atualizacao":  "",
+                                        "endereco_dataset":  "http://dados.recife.pe.gov.br/dataset/casos-de-dengue-zika-e-chikungunya",
+                                        "status":  "ativo",
+                                        "endereco_dataset_substituto":  "",
+                                        "granularidade":  "",
+                                        "etiquetas":  "Chikungunya, Dengue, Zika, epidemiologia, saÃºde, vÃ­rus"
+                                    },
+                      "recursos":  [
+                                       {
+                                           "identificador":  "data/chikungunya-2022.csv",
+                                           "titulo":  " chikungunya 2022.Value.ToUpperInvariant() hikungunya  chikungunya 2022.Value.ToUpperInvariant() 022",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados chikungunya-2022.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/chikungunya-2023.csv",
+                                           "titulo":  " chikungunya 2023.Value.ToUpperInvariant() hikungunya  chikungunya 2023.Value.ToUpperInvariant() 023",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados chikungunya-2023.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/chikungunya-2024.csv",
+                                           "titulo":  " chikungunya 2024.Value.ToUpperInvariant() hikungunya  chikungunya 2024.Value.ToUpperInvariant() 024",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados chikungunya-2024.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/chikungunya-2025.csv",
+                                           "titulo":  " chikungunya 2025.Value.ToUpperInvariant() hikungunya  chikungunya 2025.Value.ToUpperInvariant() 025",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados chikungunya-2025.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/dengue-2022.csv",
+                                           "titulo":  " dengue 2022.Value.ToUpperInvariant() engue  dengue 2022.Value.ToUpperInvariant() 022",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados dengue-2022.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/dengue-2023.csv",
+                                           "titulo":  " dengue 2023.Value.ToUpperInvariant() engue  dengue 2023.Value.ToUpperInvariant() 023",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados dengue-2023.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/dengue-2024.csv",
+                                           "titulo":  " dengue 2024.Value.ToUpperInvariant() engue  dengue 2024.Value.ToUpperInvariant() 024",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados dengue-2024.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/dengue-2025.csv",
+                                           "titulo":  " dengue 2025.Value.ToUpperInvariant() engue  dengue 2025.Value.ToUpperInvariant() 025",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados dengue-2025.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/zika-2022.csv",
+                                           "titulo":  " zika 2022.Value.ToUpperInvariant() ika  zika 2022.Value.ToUpperInvariant() 022",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados zika-2022.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/zika-2023.csv",
+                                           "titulo":  " zika 2023.Value.ToUpperInvariant() ika  zika 2023.Value.ToUpperInvariant() 023",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados zika-2023.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/zika-2024.csv",
+                                           "titulo":  " zika 2024.Value.ToUpperInvariant() ika  zika 2024.Value.ToUpperInvariant() 024",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados zika-2024.csv."
+                                       },
+                                       {
+                                           "identificador":  "data/zika-2025.csv",
+                                           "titulo":  " zika 2025.Value.ToUpperInvariant() ika  zika 2025.Value.ToUpperInvariant() 025",
+                                           "formato":  "csv",
+                                           "descricao":  "Arquivo de dados zika-2025.csv."
+                                       }
+                                   ],
+                      "campos":  [
+                                     {
+                                         "codigo":  "NU_NOTIFIC",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "TP_NOT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_AGRAVO",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "DT_NOTIFIC",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "SEM_NOT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NU_ANO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "SG_UF_NOT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_MUNICIP",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_REGIONA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_UNIDADE",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_SIN_PRI",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "SEM_PRI",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_NASC",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "NU_IDADE_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CS_SEXO",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "CS_GESTANT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CS_RACA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CS_ESCOL_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "SG_UF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_MN_RESI",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_RG_RESI",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_DISTRIT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_BAIRRO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NM_BAIRRO",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "ID_LOGRADO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NM_LOGRADO",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "NU_CEP",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CS_ZONA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ID_PAIS",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_INVEST",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "ID_OCUPA_N",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "FEBRE",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "MIALGIA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CEFALEIA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "EXANTEMA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "VOMITO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NAUSEA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DOR_COSTAS",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CONJUNTVIT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ARTRITE",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ARTRALGIA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "PETEQUIA_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "LEUCOPENIA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "LACO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DOR_RETRO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DIABETES",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HEMATOLOG",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HEPATOPAT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "RENAL",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HIPERTENSA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ACIDO_PEPT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "AUTO_IMUNE",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_CHIK_S1",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "DT_CHIK_S2",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "DT_PRNT",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "RES_CHIKS1",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "RES_CHIKS2",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "RESUL_PRNT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_SORO",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "RESUL_SORO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_NS1",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "RESUL_NS1",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_VIRAL",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "RESUL_VI_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_PCR",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "RESUL_PCR_",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "SOROTIPO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HISTOPA_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "IMUNOH_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HOSPITALIZ",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_INTERNA",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "UF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "MUNICIPIO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "TPAUTOCTO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "COUFINF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "COPAISINF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "COMUNINF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CODISINF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CO_BAINF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NOBAIINF",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "CLASSI_FIN",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CRITERIO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DOENCA_TRA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CLINC_CHIK",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "EVOLUCAO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_OBITO",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "DT_ENCERRA",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_HIPOT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_PLAQ",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_VOM",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_SANG",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_HEMAT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_ABDOM",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_LETAR",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_HEPAT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "ALRM_LIQ",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_ALRM",
+                                         "tipo":  "string"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_PULSO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_CONV",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_ENCH",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_INSUF",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_TAQUI",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_EXTRE",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_HIPOT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_HEMAT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_MELEN",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_METRO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_SANG",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_AST",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_MIOC",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_CONSC",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GRAV_ORGAO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DT_GRAV",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "MANI_HEMOR",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "EPISTAXE",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "GENGIVO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "METRO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "PETEQUIAS",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HEMATURA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "SANGRAM",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "LACO_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "PLASMATICO",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "EVIDENCIA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "PLAQ_MENOR",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CON_FHD",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "COMPLICA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "HOSPITAL",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DDD_HOSP",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "TEL_HOSP",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NU_LOTE_I",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "DS_OBS",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CS_SUSPEIT",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "NDUPLIC_N",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "IN_VINCULA",
+                                         "tipo":  "numero"
+                                     },
+                                     {
+                                         "codigo":  "CO_BAINFC",
+                                         "tipo":  "numero"
+                                     }
+                                 ]
+                  }
+}
