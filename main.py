@@ -1,14 +1,12 @@
-import os
-
-import pandas as pd
-import streamlit as st
+from dash import Dash, html
 
 
-def main():
-    st.html('''
-    <h1>Análise de casos de Dengue, Zika e Chikungunya entre 2023 e 2025</h1>
-    ''')
+app = Dash(__name__)
+app.title = "Análise epidemiológica"
+app.layout = html.Main(
+    html.H1("Análise de casos de Dengue, Zika e Chikungunya entre 2023 e 2025")
+)
 
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
