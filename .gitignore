@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Anotações locais de estudo/relatórios
+dankDocs/
