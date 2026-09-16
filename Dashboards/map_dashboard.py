@@ -163,3 +163,114 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
                  style={'flex': '1', 'minWidth': '450px', 'backgroundColor': '#ffffff', 'padding': '15px', 'borderRadius': '10px', 'boxShadow': '0 2px 8px rgba(0,0,0,0.08)'})
     ])
 ])
+
+
+@app.callback(
+    [
+        Output('card-total-bairros', 'children'),
+        Output('card-bairro-pico', 'children'),
+        Output('card-casos-bairro-pico', 'children'),
+        Output('card-media-bairro', 'children'),
+        Output('mapa-real-bairros', 'figure'),
+        Output('grafico-ranking-bairros', 'figure')
+    ],
+    [
+        Input('filtro-perspectiva', 'value'),
+        Input('filtro-ano', 'value'),
+        Input('filtro-doenca', 'value'),
+        Input('filtro-municipio', 'value')
+    ]
+)
+def atualizar_dashboard(perspectiva, sel_anos, sel_doencas, sel_muns):
+    if not sel_anos or not sel_doencas or not sel_muns or not perspectiva:
+        fig_v = px.bar(
+            title="Selecione opções nos filtros para visualizar a análise.")
+        return "0", "-", "0", "0", fig_v, fig_v
+
+    sub = df[df['ano'].isin(sel_anos) & df['doenca'].isin(
+        sel_doencas) & df['mun_residencia'].isin(sel_muns)]
+
+    if perspectiva == 'Bairro de Residência':
+        col_analise = 'bairro'
+        label_analise = 'Bairro'
+    elif perspectiva == 'Município de Notificação':
+        col_analise = 'mun_notificacao'
+        label_analise = 'Município de Notificação'
+    else:
+        col_analise = 'unidade_saude'
+        label_analise = 'Unidade de Saúde'
+
+    sub_filtrado = sub[~sub[col_analise].isin(
+        ['Não Informado', 'Não informado', 'Não informada', 'Nan', ''])]
+
+    if sub_filtrado.empty:
+        fig_v = px.bar(
+            title=f"Nenhum registro de {label_analise.lower()} encontrado com os filtros aplicados.")
+        return "0", "-", "0", "0", fig_v, fig_v
+
+    counts = sub_filtrado.groupby(col_analise)['casos'].sum(
+    ).reset_index().sort_values(by='casos', ascending=False)
+
+    total_locais = len(counts)
+    local_pico = counts.iloc[0][col_analise]
+    casos_pico = counts.iloc[0]['casos']
+    media_casos = sub_filtrado['casos'].sum(
+    ) / total_locais if total_locais > 0 else 0
+
+    if perspectiva == 'Bairro de Residência' and geojson_bairros:
+        fig_mapa = px.choropleth_mapbox(
+            counts,
+            geojson=geojson_bairros,
+            locations='bairro',
+            featureidkey="properties.name",
+            color='casos',
+            color_continuous_scale="Reds",
+            mapbox_style="carto-positron",
+            zoom=10.5,
+            center={"lat": -8.0476, "lon": -34.8770},
+            opacity=0.7,
+            title="<b>Mapa Real por Bairros do Recife (Intensidade de Casos)</b>",
+            labels={'casos': 'Total de Casos', 'bairro': 'Bairro'}
+        )
+    else:
+        fig_mapa = px.bar(
+            counts.head(10),
+            x='casos',
+            y=col_analise,
+            orientation='h',
+            title=f"<b>Distribuição de Casos por {label_analise}</b>",
+            color='casos',
+            color_continuous_scale='Reds'
+        )
+
+    fig_mapa.update_layout(template="plotly_white",
+                           margin=dict(l=20, r=20, t=50, b=20))
+
+    top15 = counts.head(15).sort_values(by='casos', ascending=True)
+
+    fig_ranking = px.bar(
+        top15,
+        x='casos',
+        y=col_analise,
+        orientation='h',
+        text='casos',
+        title=f"<b>Ranking Top 15 - {label_analise} (Prioridade de Campo)</b>",
+        labels={'casos': 'Total de Casos Notificados',
+                col_analise: label_analise},
+        color='casos',
+        color_continuous_scale='Reds'
+    )
+    fig_ranking.update_layout(
+        template="plotly_white",
+        margin=dict(l=20, r=20, t=50, b=20),
+        coloraxis_showscale=False
+    )
+
+    return (
+        f"{total_locais:,}".replace(",", "."),
+        str(local_pico),
+        f"{casos_pico:,}".replace(",", "."),
+        f"{media_casos:.1f}",
+        fig_mapa,
+        fig_ranking
+    )
