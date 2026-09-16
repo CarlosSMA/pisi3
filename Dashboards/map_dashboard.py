@@ -102,3 +102,64 @@ CARD_STYLE = {
     'backgroundColor': '#ffffff', 'borderRadius': '10px', 'padding': '18px',
     'boxShadow': '0 2px 8px rgba(0,0,0,0.08)', 'textAlign': 'center', 'flex': '1', 'margin': '8px'
 }
+
+
+def criar_dropdown(id_elem, rotulo, lista, multi=True, valor_padrao=None):
+    val = valor_padrao if valor_padrao is not None else (
+        lista if multi else (lista[0] if lista else None))
+    return html.Div(style={'flex': '1', 'minWidth': '200px'}, children=[
+        html.Label(rotulo, style={'fontWeight': 'bold', 'color': '#475569'}),
+        dcc.Dropdown(id=id_elem, options=[{'label': str(x), 'value': x} for x in lista],
+                     value=val, multi=multi, placeholder=f"Selecione {rotulo.lower()}")
+    ])
+
+
+kpis = [
+    ("Total de Bairros Notificados", "card-total-bairros", "#2563eb"),
+    ("Bairro / Ponto de Pico", "card-bairro-pico", "#dc2626"),
+    ("Casos na Localidade Líder", "card-casos-bairro-pico", "#d97706"),
+    ("Média de Casos por Ponto", "card-media-bairro", "#059669")
+]
+
+app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe UI, sans-serif', 'padding': '25px'}, children=[
+
+    html.Div([
+        html.H1("🗺️ Mapa Epidemiológico e Priorização Territorial",
+                style={'color': '#1e293b', 'marginBottom': '5px'}),
+        html.H4("Pergunta Principal: Quais bairros apresentam maior concentração de risco e casos?", style={
+                'color': '#64748b', 'fontWeight': 'normal', 'marginTop': '0'})
+    ], style={'marginBottom': '20px'}),
+
+    html.Div(style={'backgroundColor': '#ffffff', 'borderRadius': '10px', 'padding': '15px', 'boxShadow': '0 2px 8px rgba(0,0,0,0.08)', 'marginBottom': '20px'}, children=[
+        html.H5("🔍 Filtros de Análise Territorial e Origem da Informação",
+                style={'marginBottom': '12px', 'color': '#334155'}),
+        html.Div(style={'display': 'flex', 'gap': '20px', 'flexWrap': 'wrap', 'marginBottom': '10px'}, children=[
+            criar_dropdown('filtro-perspectiva', 'Visão Territorial:',
+                           ['Bairro de Residência',
+                               'Município de Notificação', 'Unidade de Saúde'],
+                           multi=False, valor_padrao='Bairro de Residência'),
+            criar_dropdown('filtro-ano', 'Ano:', anos),
+            criar_dropdown('filtro-doenca', 'Doença:', doencas),
+            criar_dropdown('filtro-municipio',
+                           'Município de Residência:', municipios)
+        ])
+    ]),
+
+    html.Div(style={'display': 'flex', 'justifyContent': 'space-between', 'flexWrap': 'wrap', 'margin': '-8px'}, children=[
+        html.Div(style=CARD_STYLE, children=[
+            html.P(tit, style={'color': '#64748b',
+                   'fontSize': '14px', 'margin': '0'}),
+            html.H2(id=cid, style={'color': cor, 'margin': '8px 0 0 0'})
+        ]) for tit, cid, cor in kpis
+    ]),
+
+    html.Br(),
+
+    html.Div(style={'display': 'flex', 'gap': '20px', 'flexWrap': 'wrap'}, children=[
+        html.Div(dcc.Graph(id='mapa-real-bairros'),
+                 style={'flex': '1', 'minWidth': '450px', 'backgroundColor': '#ffffff', 'padding': '15px', 'borderRadius': '10px', 'boxShadow': '0 2px 8px rgba(0,0,0,0.08)'}),
+
+        html.Div(dcc.Graph(id='grafico-ranking-bairros'),
+                 style={'flex': '1', 'minWidth': '450px', 'backgroundColor': '#ffffff', 'padding': '15px', 'borderRadius': '10px', 'boxShadow': '0 2px 8px rgba(0,0,0,0.08)'})
+    ])
+])
