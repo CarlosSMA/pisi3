@@ -87,3 +87,18 @@ def carregar_dados():
     df_final = pd.concat(dfs, ignore_index=True).dropna(subset=['ano'])
     df_final['ano'] = df_final['ano'].astype(int)
     return df_final
+
+
+df = carregar_dados()
+
+app = dash.Dash(__name__)
+app.title = "Mapa Epidemiológico e Priorização Territorial"
+
+anos = sorted(df['ano'].unique())
+doencas = sorted(df['doenca'].unique())
+municipios = sorted([str(m) for m in df['mun_residencia'].dropna().unique()])
+
+CARD_STYLE = {
+    'backgroundColor': '#ffffff', 'borderRadius': '10px', 'padding': '18px',
+    'boxShadow': '0 2px 8px rgba(0,0,0,0.08)', 'textAlign': 'center', 'flex': '1', 'margin': '8px'
+}
