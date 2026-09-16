@@ -274,3 +274,7 @@ def atualizar_dashboard(perspectiva, sel_anos, sel_doencas, sel_muns):
         fig_mapa,
         fig_ranking
     )
+
+
+if __name__ == '__main__':
+    app.run(debug=False, port=8051)
