@@ -1,4 +1,8 @@
-from pathlib import Path
+if __package__:
+    from .tratamento_dados import carregar_dados_tratados, substituir_nao_informado_pela_moda
+else:
+    from tratamento_dados import carregar_dados_tratados, substituir_nao_informado_pela_moda
+
 
 import dash
 import pandas as pd
@@ -9,67 +13,7 @@ DISEASE_COLORS = {"Dengue": "#cd73b8", "Chikungunya": "#9648BA", "Zika": "#b9643
 SEX_LABELS = {"F": "Feminino", "M": "Masculino", "I": "Ignorado"}
 RACE_LABELS = {"1": "Branca", "2": "Preta", "3": "Amarela", "4": "Parda", "5": "Indígena", "9": "Ignorado"}
 
-def _series(frame, column, default):
-    return frame[column] if column in frame else pd.Series(default, index=frame.index)
-
-def _age(value):
-    if pd.isna(value):
-        return pd.NA
-    try:
-        code = int(float(str(value)))
-    except (TypeError, ValueError):
-        return pd.NA
-    prefix, amount = divmod(code, 1000)
-    factors = {1: 1 / 8760, 2: 1 / 365, 3: 1 / 12, 4: 1}
-    years = amount * factors.get(prefix, 1)
-    return years if 0 <= years <= 120 else pd.NA
-
-
-def carregar_dados():
-    data_dir = Path(__file__).resolve().parent.parent / "data"
-    frames = []
-    diseases = (("dengue", "Dengue"), ("chik", "Chikungunya"), ("zika", "Zika"))
-
-    for path in sorted(data_dir.glob("*.csv")):
-        disease = next((label for key, label in diseases if key in path.name.lower()), None)
-        if disease is None:
-            continue
-        source = pd.read_csv(path, sep=None, engine="python", on_bad_lines="skip")
-        source.columns = [str(column).strip().upper() for column in source.columns]
-        year = pd.to_numeric(_series(source, "NU_ANO", pd.NA), errors="coerce")
-        if year.isna().all() and "DT_NOTIFIC" in source:
-            year = pd.to_datetime(source["DT_NOTIFIC"], dayfirst=True, errors="coerce").dt.year
-
-        municipality = _series(source, "MUNICIPIO", pd.NA).astype("string").str.strip()
-        if municipality.isna().all() or (municipality == "").all():
-            municipality = _series(source, "ID_MN_RESI", _series(source, "ID_MUNICIP", "Não informado"))
-        municipality = municipality.fillna("Não informado").replace("", "Não informado").astype(str)
-        age = pd.to_numeric(_series(source, "NU_IDADE_N", pd.NA).map(_age), errors="coerce")
-        normalized = pd.DataFrame({
-            "doenca": disease,
-            "ano": year,
-            "municipio": municipality,
-            "idade": age,
-            "sexo": _series(source, "CS_SEXO", "I").fillna("I").astype(str).str.upper(),
-            "raca": _series(source, "CS_RACA", "9").fillna("9").astype(str).str.replace(r"\.0$", "", regex=True),
-            "casos": 1,
-        })
-        normalized["sexo"] = normalized["sexo"].map(SEX_LABELS).fillna("Não informado")
-        normalized["raca"] = normalized["raca"].map(RACE_LABELS).fillna("Não informado")
-        normalized["faixa_etaria"] = pd.cut(
-            normalized["idade"], [-1, 4, 14, 24, 44, 64, 120],
-            labels=["0–4", "5–14", "15–24", "25–44", "45–64", "65+"],
-        ).astype("object").fillna("Não informado")
-        frames.append(normalized)
-
-    if not frames:
-        raise FileNotFoundError(f"Nenhum dataset encontrado em {data_dir}")
-    result = pd.concat(frames, ignore_index=True).dropna(subset=["ano"])
-    result["ano"] = result["ano"].astype(int)
-    return result
-
-
-df = carregar_dados()
+df = carregar_dados_tratados()
 app = dash.Dash(__name__)
 app.title = "Perfil demográfico das arboviroses"
 years = sorted(df["ano"].unique())
@@ -131,13 +75,19 @@ def atualizar_dashboard(selected_years, selected_diseases, selected_municipaliti
         empty.update_layout(title="Nenhum registro encontrado com os filtros aplicados.")
         return "0", "—", "—", "—", empty, empty, empty, empty
 
+    filtered = substituir_nao_informado_pela_moda(filtered, ["faixa_etaria", "sexo", "raca"])
     age = filtered.groupby("faixa_etaria", observed=False)["casos"].sum().reset_index()
-    sex = filtered.groupby(["sexo", "doenca"])["casos"].sum().reset_index()
+    sex_graph = filtered.copy()
+    valid_sex = ~sex_graph["sexo"].isin(["Ignorado", "Não informado"])
+    sex_mode = sex_graph.loc[valid_sex, "sexo"].mode()
+    if not sex_mode.empty:
+        sex_graph.loc[~valid_sex, "sexo"] = sex_mode.iat[0]
+    sex = sex_graph.groupby(["sexo", "doenca"])["casos"].sum().reset_index()
     race = filtered.groupby(["raca", "doenca"])["casos"].sum().reset_index()
     yearly = filtered.groupby(["ano", "doenca"])["casos"].sum().reset_index()
     figures = [
         px.bar(age, x="faixa_etaria", y="casos", title="Distribuição por Faixa Etária", labels={"faixa_etaria": "Faixa Etária", "casos": "Total de Casos"}),
-    
+
         px.bar(sex, x="sexo", y="casos", color="doenca", barmode="group", title="Distribuição por sexo",
                color_discrete_map=DISEASE_COLORS, labels={"sexo": "Sexo", "casos": "Total de Casos"}),
         px.bar(race, x="raca", y="casos", color="doenca", barmode="group", title="Distribuição por raça/cor",
@@ -145,6 +95,9 @@ def atualizar_dashboard(selected_years, selected_diseases, selected_municipaliti
         px.line(yearly, x="ano", y="casos", color="doenca", markers=True, title="Evolução anual",
                 color_discrete_map=DISEASE_COLORS, labels={"ano": "Ano", "casos": "Total de Casos", "doenca": "Doença"}),
     ]
+    annual_years = sorted(yearly["ano"].unique())
+    figures[-1].update_xaxes(tickmode="array", tickvals=annual_years,
+                            ticktext=[str(int(year)) for year in annual_years])
     for figure in figures:
         figure.update_layout(template="plotly_white", margin={"l": 20, "r": 20, "t": 50, "b": 20})
     median = filtered["idade"].median()
