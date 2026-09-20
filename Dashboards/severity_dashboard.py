@@ -209,7 +209,7 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
     html.Div(style={'display': 'flex', 'justifyContent': 'space-between', 'flexWrap': 'wrap', 'margin': '-8px'}, children=[
         html.Div(style=card_style, children=[
             html.P("Taxa de Hospitalização", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-taxa-hosp', style={'color': '#2563eb', 'margin': '8px 0 0 0'})
+            html.H2(id='card-taxa-hosp', style={'color': '#ea580c', 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
             html.P("Casos de Alarme / Graves", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
@@ -217,11 +217,11 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
         ]),
         html.Div(style=card_style, children=[
             html.P("Óbitos Confirmados", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-obitos', style={'color': '#dc2626', 'margin': '8px 0 0 0'})
+            html.H2(id='card-obitos', style={'color': "#000000", 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
             html.P("Tempo Médio Encerramento", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-tempo-medio', style={'color': '#059669', 'margin': '8px 0 0 0'})
+            html.H2(id='card-tempo-medio', style={'color': '#475569', 'margin': '8px 0 0 0'})
         ])
     ]),
     
