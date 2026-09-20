@@ -254,7 +254,7 @@ def atualizar_dashboard(anos, doencas, municipios):
         markers=True,
         title="<b>Evolução Semanal dos Casos por Doença</b>",
         labels={'semana_epidemiologica': 'Semana Epidemiológica', 'casos': 'Total de Casos', 'doenca': 'Doença'},
-        color_discrete_map={'Dengue': '#edf50b', 'Chikungunya': '#65008e', 'Zika': '#ff0000'}
+        color_discrete_map={"Dengue": "#cd73b8", "Chikungunya": "#9648BA", "Zika": "#b96433"}
     )
     fig_linha.update_layout(
         template="plotly_white",
@@ -272,7 +272,7 @@ def atualizar_dashboard(anos, doencas, municipios):
         barmode='group',
         title="<b>Comparativo Anual por Doença</b>",
         labels={'ano': 'Ano', 'casos': 'Total de Casos', 'doenca': 'Doença'},
-        color_discrete_map={'Dengue': '#edf50b', 'Chikungunya': '#65008e', 'Zika': '#ff0000'}
+        color_discrete_map={"Dengue": "#cd73b8", "Chikungunya": "#9648BA", "Zika": "#b96433"}
     )
     fig_barra.update_layout(
         template="plotly_white",
