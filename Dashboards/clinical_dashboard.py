@@ -9,14 +9,14 @@ import pandas as pd
 import plotly.express as px
 from dash import Input, Output, dash_table, dcc, html
 
-DISEASE_COLORS = {"Dengue": "#edf50b", "Chikungunya": "#65008e", "Zika": "#ff0000"}
+DISEASE_COLORS = {"Dengue": "#cd73b8", "Chikungunya": "#9648BA", "Zika": "#b96433"}
 RESULT_COLORS = {"Reagente / positivo": "#dc2626", "Não reagente / negativo": "#3b82f6",
                  "Inconclusivo": "#d9a106", "Não realizado": "#94aeb8", "Não informado": "#c592ce"}
 CRITERIA_COLORS = {
-    "Clínico-epidemiológico": "#ffaa00",
-    "Laboratorial": "#ff0000",
-    "Em investigação": "#b300ff",
-    "Não informado": "#94a3b8"
+    "Clínico-epidemiológico": "#c1902e",  
+    "Laboratorial": "#b63737",           
+    "Em investigação": "#9437bc",         
+    "Não informado": "#5e656e"            
 }
 
 SEROTYPE_COLORS = {

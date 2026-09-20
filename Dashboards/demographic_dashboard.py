@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.express as px
 from dash import Input, Output, dcc, html
 
-DISEASE_COLORS = {"Dengue": "#edf50b", "Chikungunya": "#65008e", "Zika": "#ff0000"}
+DISEASE_COLORS = {"Dengue": "#cd73b8", "Chikungunya": "#9648BA", "Zika": "#b96433"}
 SEX_LABELS = {"F": "Feminino", "M": "Masculino", "I": "Ignorado"}
 RACE_LABELS = {"1": "Branca", "2": "Preta", "3": "Amarela", "4": "Parda", "5": "Indígena", "9": "Ignorado"}
 

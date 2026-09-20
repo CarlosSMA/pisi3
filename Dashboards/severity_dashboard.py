@@ -218,7 +218,7 @@ def atualizar_dashboard(anos, doencas, municipios):
         barmode='group',
         title="<b>Complicações e Gravidade Clínica por Doença</b>",
         labels={'doenca': 'Doença', 'Casos': 'Total de Casos', 'Classificação': 'Tipo'},
-        color_discrete_map={'Sinais de Alarme': '#d97706', 'Casos Graves': '#dc2626', 'Óbitos': '#000000'}
+        color_discrete_map={'Sinais de Alarme': "#e08f04", 'Casos Graves': '#dc2626', 'Óbitos': '#000000'}
     )
     fig_grav.update_layout(
         template="plotly_white",
