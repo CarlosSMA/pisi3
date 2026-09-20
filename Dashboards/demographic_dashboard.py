@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 from dash import Input, Output, dcc, html
 
-DISEASE_COLORS = {"Dengue": "#2563eb", "Chikungunya": "#d97706", "Zika": "#059669"}
+DISEASE_COLORS = {"Dengue": "#edf50b", "Chikungunya": "#65008e", "Zika": "#ff0000"}
 SEX_LABELS = {"F": "Feminino", "M": "Masculino", "I": "Ignorado"}
 RACE_LABELS = {"1": "Branca", "2": "Preta", "3": "Amarela", "4": "Parda", "5": "Indígena", "9": "Ignorado"}
 
@@ -136,13 +136,14 @@ def atualizar_dashboard(selected_years, selected_diseases, selected_municipaliti
     race = filtered.groupby(["raca", "doenca"])["casos"].sum().reset_index()
     yearly = filtered.groupby(["ano", "doenca"])["casos"].sum().reset_index()
     figures = [
-        px.bar(age, x="faixa_etaria", y="casos", title="Distribuição por faixa etária"),
+        px.bar(age, x="faixa_etaria", y="casos", title="Distribuição por Faixa Etária", labels={"faixa_etaria": "Faixa Etária", "casos": "Total de Casos"}),
+    
         px.bar(sex, x="sexo", y="casos", color="doenca", barmode="group", title="Distribuição por sexo",
-               color_discrete_map=DISEASE_COLORS),
+               color_discrete_map=DISEASE_COLORS, labels={"sexo": "Sexo", "casos": "Total de Casos"}),
         px.bar(race, x="raca", y="casos", color="doenca", barmode="group", title="Distribuição por raça/cor",
-               color_discrete_map=DISEASE_COLORS),
+               color_discrete_map=DISEASE_COLORS, labels={"raca": "Raça/Cor", "casos": "Total de Casos", "doenca": "Doença"}),
         px.line(yearly, x="ano", y="casos", color="doenca", markers=True, title="Evolução anual",
-                color_discrete_map=DISEASE_COLORS),
+                color_discrete_map=DISEASE_COLORS, labels={"ano": "Ano", "casos": "Total de Casos", "doenca": "Doença"}),
     ]
     for figure in figures:
         figure.update_layout(template="plotly_white", margin={"l": 20, "r": 20, "t": 50, "b": 20})

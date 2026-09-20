@@ -5,10 +5,22 @@ import pandas as pd
 import plotly.express as px
 from dash import Input, Output, dash_table, dcc, html
 
-DISEASE_COLORS = {"Dengue": "#2563eb", "Chikungunya": "#d97706", "Zika": "#059669"}
-RESULT_COLORS = {"Reagente / positivo": "#dc2626", "Não reagente / negativo": "#16a34a",
-                 "Inconclusivo": "#f59e0b", "Não realizado": "#94a3b8", "Não informado": "#e2e8f0"}
+DISEASE_COLORS = {"Dengue": "#edf50b", "Chikungunya": "#65008e", "Zika": "#ff0000"}
+RESULT_COLORS = {"Reagente / positivo": "#dc2626", "Não reagente / negativo": "#3b82f6",
+                 "Inconclusivo": "#d9a106", "Não realizado": "#94aeb8", "Não informado": "#c592ce"}
+CRITERIA_COLORS = {
+    "Clínico-epidemiológico": "#ffaa00",  
+    "Laboratorial": "#ff0000",           
+    "Em investigação": "#b300ff",         
+    "Não informado": "#94a3b8"            
+}
 
+SEROTYPE_COLORS = {
+    "DENV-1": "#f5f10b",                  
+    "DENV-2": "#ff7700",                 
+    "DENV-3": "#ff0000",                  
+    "DENV-4": "#78350f"                   
+}
 SYMPTOMS = {
     "FEBRE": "Febre", "MIALGIA": "Mialgia", "CEFALEIA": "Cefaleia", "EXANTEMA": "Exantema",
     "VOMITO": "Vômito", "NAUSEA": "Náusea", "DOR_COSTAS": "Dor nas costas", "CONJUNTVIT": "Conjuntivite",
@@ -236,6 +248,7 @@ def _confirmation_figures(filtered):
     criteria["percentual"] = criteria["casos"] / criteria.groupby("doenca")["casos"].transform("sum") * 100
     criteria_figure = _figure(px.bar(criteria, x="doenca", y="percentual", color="criterio", barmode="stack",
                                      title="Critério de confirmação/descarte por arbovirose",
+                                     color_discrete_map=CRITERIA_COLORS,
                                      labels={"percentual": "% dos registros", "doenca": "", "criterio": ""},
                                      hover_data={"casos": True}))
 
@@ -261,6 +274,7 @@ def _confirmation_figures(filtered):
     else:
         serotype_figure = _figure(px.bar(serotype, x="ano", y="casos", color="sorotipo", barmode="stack",
                                          title="Sorotipos de dengue identificados por ano",
+                                         color_discrete_map=SEROTYPE_COLORS,
                                          labels={"casos": "Registros", "ano": "", "sorotipo": ""}))
         serotype_figure.update_xaxes(type="category")
     return criteria_figure, classification_figure, exams_figure, serotype_figure

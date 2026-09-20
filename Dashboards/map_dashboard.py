@@ -115,10 +115,10 @@ def criar_dropdown(id_elem, rotulo, lista, multi=True, valor_padrao=None):
 
 
 kpis = [
-    ("Total de Bairros Notificados", "card-total-bairros", "#2563eb"),
+    ("Total de Bairros Notificados", "card-total-bairros", "#000000"),
     ("Bairro / Ponto de Pico", "card-bairro-pico", "#dc2626"),
-    ("Casos na Localidade Líder", "card-casos-bairro-pico", "#d97706"),
-    ("Média de Casos por Ponto", "card-media-bairro", "#059669")
+    ("Casos na Localidade Líder", "card-casos-bairro-pico", "#ea580c"),
+    ("Média de Casos por Ponto", "card-media-bairro", "#000000")
 ]
 
 app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe UI, sans-serif', 'padding': '25px'}, children=[
@@ -240,7 +240,8 @@ def atualizar_dashboard(perspectiva, sel_anos, sel_doencas, sel_muns):
             orientation='h',
             title=f"<b>Distribuição de Casos por {label_analise}</b>",
             color='casos',
-            color_continuous_scale='Reds'
+            color_continuous_scale='Reds',
+            labels={'casos': 'Total de Casos', "bairro": 'Bairro', col_analise: label_analise}
         )
 
     fig_mapa.update_layout(template="plotly_white",

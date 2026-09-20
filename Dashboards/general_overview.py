@@ -176,7 +176,7 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
         ]),
         html.Div(style=card_style, children=[
             html.P("Doença Predominante", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-doenca-predominante', style={'color': '#2563eb', 'margin': '8px 0 0 0'})
+            html.H2(id='card-doenca-predominante', style={'color': "#f80303", 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
             html.P("Ano de Maior Ocorrência", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
@@ -254,7 +254,7 @@ def atualizar_dashboard(anos, doencas, municipios):
         markers=True,
         title="<b>Evolução Semanal dos Casos por Doença</b>",
         labels={'semana_epidemiologica': 'Semana Epidemiológica', 'casos': 'Total de Casos', 'doenca': 'Doença'},
-        color_discrete_map={'Dengue': '#2563eb', 'Chikungunya': '#d97706', 'Zika': '#059669'}
+        color_discrete_map={'Dengue': '#edf50b', 'Chikungunya': '#65008e', 'Zika': '#ff0000'}
     )
     fig_linha.update_layout(
         template="plotly_white",
@@ -272,7 +272,7 @@ def atualizar_dashboard(anos, doencas, municipios):
         barmode='group',
         title="<b>Comparativo Anual por Doença</b>",
         labels={'ano': 'Ano', 'casos': 'Total de Casos', 'doenca': 'Doença'},
-        color_discrete_map={'Dengue': '#2563eb', 'Chikungunya': '#d97706', 'Zika': '#059669'}
+        color_discrete_map={'Dengue': '#edf50b', 'Chikungunya': '#65008e', 'Zika': '#ff0000'}
     )
     fig_barra.update_layout(
         template="plotly_white",
