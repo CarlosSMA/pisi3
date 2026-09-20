@@ -1,4 +1,8 @@
-from pathlib import Path
+if __package__:
+    from .tratamento_dados import carregar_dados_tratados, INTERVALS, substituir_nao_informado_pela_moda
+else:
+    from tratamento_dados import carregar_dados_tratados, INTERVALS, substituir_nao_informado_pela_moda
+
 
 import dash
 import pandas as pd
@@ -9,130 +13,25 @@ DISEASE_COLORS = {"Dengue": "#edf50b", "Chikungunya": "#65008e", "Zika": "#ff000
 RESULT_COLORS = {"Reagente / positivo": "#dc2626", "Não reagente / negativo": "#3b82f6",
                  "Inconclusivo": "#d9a106", "Não realizado": "#94aeb8", "Não informado": "#c592ce"}
 CRITERIA_COLORS = {
-    "Clínico-epidemiológico": "#ffaa00",  
-    "Laboratorial": "#ff0000",           
-    "Em investigação": "#b300ff",         
-    "Não informado": "#94a3b8"            
+    "Clínico-epidemiológico": "#ffaa00",
+    "Laboratorial": "#ff0000",
+    "Em investigação": "#b300ff",
+    "Não informado": "#94a3b8"
 }
 
 SEROTYPE_COLORS = {
-    "DENV-1": "#f5f10b",                  
-    "DENV-2": "#ff7700",                 
-    "DENV-3": "#ff0000",                  
-    "DENV-4": "#78350f"                   
+    "DENV-1": "#f5f10b",
+    "DENV-2": "#ff7700",
+    "DENV-3": "#ff0000",
+    "DENV-4": "#78350f"
 }
-SYMPTOMS = {
-    "FEBRE": "Febre", "MIALGIA": "Mialgia", "CEFALEIA": "Cefaleia", "EXANTEMA": "Exantema",
-    "VOMITO": "Vômito", "NAUSEA": "Náusea", "DOR_COSTAS": "Dor nas costas", "CONJUNTVIT": "Conjuntivite",
-    "ARTRITE": "Artrite", "ARTRALGIA": "Artralgia", "PETEQUIA_N": "Petéquias", "LEUCOPENIA": "Leucopenia",
-    "LACO": "Prova do laço", "DOR_RETRO": "Dor retro-orbital",
-}
-EXAMS = {
-    "RESUL_NS1": "NS1", "RESUL_PCR_": "RT-PCR", "RESUL_SORO": "Sorologia IgM (dengue)",
-    "RESUL_VI_N": "Isolamento viral", "RES_CHIKS1": "Sorologia IgM chik. (S1)",
-    "RES_CHIKS2": "Sorologia IgM chik. (S2)", "RESUL_PRNT": "PRNT",
-}
-RESULT_LABELS = {"1": "Reagente / positivo", "2": "Não reagente / negativo", "3": "Inconclusivo", "4": "Não realizado"}
-CRITERIA_LABELS = {"1": "Laboratorial", "2": "Clínico-epidemiológico", "3": "Em investigação"}
-SEROTYPE_LABELS = {"1": "DENV-1", "2": "DENV-2", "3": "DENV-3", "4": "DENV-4"}
-# Códigos da ficha SINAN. Dengue/Chikungunya compartilham a mesma ficha (5, 8, 10-13); Zika usa outra (1, 2, 8).
-CLASSIFICATION_LABELS = {
-    "Dengue": {"5": "Descartado", "8": "Inconclusivo", "10": "Dengue", "11": "Dengue com sinais de alarme",
-               "12": "Dengue grave", "13": "Chikungunya"},
-    "Chikungunya": {"5": "Descartado", "8": "Inconclusivo", "10": "Dengue", "11": "Dengue com sinais de alarme",
-                    "12": "Dengue grave", "13": "Chikungunya"},
-    "Zika": {"1": "Zika confirmado", "2": "Descartado", "8": "Inconclusivo"},
-}
-STATUS_BY_LABEL = {"Descartado": "Descartado", "Inconclusivo": "Inconclusivo"}
-INTERVALS = {
-    "dias_sintoma_notificacao": "Sintomas → notificação",
-    "dias_notificacao_investigacao": "Notificação → investigação",
-    "dias_notificacao_encerramento": "Notificação → encerramento",
-    "dias_sintoma_encerramento": "Sintomas → encerramento",
-}
-
-
-def _series(frame, column, default):
-    return frame[column] if column in frame else pd.Series(default, index=frame.index)
-
-
-def _code(series):
-    """Normaliza códigos que aparecem como '5', '5.0' ou vazio entre os arquivos."""
-    return series.astype("string").str.strip().str.replace(r"\.0$", "", regex=True).replace("", pd.NA)
-
-
-def _date(series):
-    """Converte datas em dd/mm/aaaa, aaaa-mm-dd ou serial do Excel (ex.: 45363) para datetime."""
-    text = series.astype("string").str.strip()
-    serial = pd.to_numeric(text, errors="coerce")
-    from_serial = pd.to_datetime(serial, unit="D", origin="1899-12-30", errors="coerce")
-    from_text = pd.to_datetime(text.where(serial.isna()), format="mixed", dayfirst=True, errors="coerce")
-    return from_serial.fillna(from_text)
-
-
-def _days(start, end, limit=365):
-    days = (end - start).dt.days
-    return days.where((days >= 0) & (days <= limit))
-
-
-def carregar_dados():
-    data_dir = Path(__file__).resolve().parent.parent / "data"
-    frames = []
-    diseases = (("dengue", "Dengue"), ("chik", "Chikungunya"), ("zika", "Zika"), ("zica", "Zika"))
-
-    for path in sorted(data_dir.glob("*.csv")):
-        disease = next((label for key, label in diseases if key in path.name.lower()), None)
-        if disease is None:
-            continue
-        source = pd.read_csv(path, sep=None, engine="python", on_bad_lines="skip", dtype=str)
-        source.columns = [str(column).strip().upper() for column in source.columns]
-
-        notified = _date(_series(source, "DT_NOTIFIC", pd.NA))
-        onset = _date(_series(source, "DT_SIN_PRI", pd.NA))
-        investigated = _date(_series(source, "DT_INVEST", pd.NA))
-        closed = _date(_series(source, "DT_ENCERRA", pd.NA))
-        year = pd.to_numeric(_code(_series(source, "NU_ANO", pd.NA)), errors="coerce").fillna(notified.dt.year)
-        week = pd.to_numeric(_code(_series(source, "SEM_NOT", pd.NA)), errors="coerce") % 100
-        week = week.fillna(notified.dt.isocalendar().week)
-
-        classification = _code(_series(source, "CLASSI_FIN", pd.NA)).map(CLASSIFICATION_LABELS[disease])
-        normalized = pd.DataFrame({
-            "doenca": disease,
-            "ano": year,
-            "semana": week,
-            "dt_sintomas": onset,
-            "dt_notificacao": notified,
-            "classificacao": classification.fillna("Não informado"),
-            "criterio": _code(_series(source, "CRITERIO", pd.NA)).map(CRITERIA_LABELS).fillna("Não informado"),
-            "sorotipo": _code(_series(source, "SOROTIPO", pd.NA)).map(SEROTYPE_LABELS),
-            "dias_sintoma_notificacao": _days(onset, notified),
-            "dias_notificacao_investigacao": _days(notified, investigated),
-            "dias_notificacao_encerramento": _days(notified, closed),
-            "dias_sintoma_encerramento": _days(onset, closed),
-        })
-        # Caso confirmado = classificação final positiva para a arbovirose (nunca assumir que toda linha é um caso).
-        normalized["situacao"] = classification.map(STATUS_BY_LABEL).fillna(
-            classification.notna().map({True: "Confirmado", False: "Em investigação / sem classificação"}))
-        for column, label in SYMPTOMS.items():
-            normalized[f"sintoma_{label}"] = _code(_series(source, column, pd.NA)).map({"1": True, "2": False})
-        for column, label in EXAMS.items():
-            normalized[f"exame_{label}"] = _code(_series(source, column, pd.NA)).map(RESULT_LABELS).fillna("Não informado")
-        frames.append(normalized)
-
-    if not frames:
-        raise FileNotFoundError(f"Nenhum dataset encontrado em {data_dir}")
-    result = pd.concat(frames, ignore_index=True).dropna(subset=["ano", "semana"])
-    result["ano"] = result["ano"].astype(int)
-    result["semana"] = result["semana"].astype(int)
-    return result
-
-
-df = carregar_dados()
+df = carregar_dados_tratados()
 app = dash.Dash(__name__)
 app.title = "Vigilância clínica e laboratorial das arboviroses"
 years = sorted(df["ano"].unique())
 diseases = sorted(df["doenca"].unique())
 statuses = ["Confirmado", "Descartado", "Inconclusivo", "Em investigação / sem classificação"]
+statuses += [s for s in df["situacao"].unique() if s not in statuses]
 symptom_columns = [column for column in df.columns if column.startswith("sintoma_")]
 exam_columns = [column for column in df.columns if column.startswith("exame_")]
 panel = {"flex": "1", "minWidth": "450px", "backgroundColor": "#fff", "padding": "15px",
@@ -244,6 +143,7 @@ def _symptom_figures(filtered):
 
 
 def _confirmation_figures(filtered):
+    filtered = substituir_nao_informado_pela_moda(filtered, ["criterio", "classificacao", *exam_columns])
     criteria = filtered.groupby(["doenca", "criterio"]).size().reset_index(name="casos")
     criteria["percentual"] = criteria["casos"] / criteria.groupby("doenca")["casos"].transform("sum") * 100
     criteria_figure = _figure(px.bar(criteria, x="doenca", y="percentual", color="criterio", barmode="stack",
@@ -259,7 +159,7 @@ def _confirmation_figures(filtered):
 
     exams = filtered.melt(id_vars="doenca", value_vars=exam_columns, var_name="exame", value_name="resultado")
     exams["exame"] = exams["exame"].str.removeprefix("exame_")
-    exams = exams[exams["resultado"] != "Não informado"].groupby(["exame", "resultado"]).size().reset_index(name="casos")
+    exams = exams[exams["resultado"] != "Não disponível"].groupby(["exame", "resultado"]).size().reset_index(name="casos")
     if exams.empty:
         exams_figure = _empty("Nenhum resultado de exame informado nos registros selecionados.")
     else:
@@ -287,18 +187,24 @@ def _interval_figures(filtered):
     if intervals.empty:
         note = "Sem datas válidas para calcular intervalos nos registros selecionados."
         return _empty(note), _empty(note)
-    box = _figure(px.box(intervals, x="intervalo", y="dias", color="doenca", color_discrete_map=DISEASE_COLORS,
-                         category_orders={"intervalo": list(INTERVALS.values())},
-                         title="Intervalos entre sintomas, notificação, investigação e encerramento (dias)",
-                         labels={"dias": "Dias", "intervalo": "", "doenca": ""}))
-    box.update_yaxes(range=[0, min(120, intervals["dias"].quantile(0.99) + 5)])
+    distribution = _figure(px.histogram(
+        intervals, x="dias", color="doenca", facet_row="intervalo", barmode="overlay",
+        histnorm="percent", nbins=30, opacity=0.7,
+        color_discrete_map=DISEASE_COLORS,
+        category_orders={"intervalo": list(INTERVALS.values())},
+        title="Distribuição percentual dos intervalos por doença",
+        labels={"dias": "Dias", "percent": "% dos registros", "doenca": ""}))
+    distribution.update_layout(height=820)
+    distribution.update_yaxes(matches=None, rangemode="tozero")
+    distribution.for_each_annotation(lambda annotation: annotation.update(
+        text=annotation.text.replace("intervalo=", "")))
 
     yearly = intervals.groupby(["ano", "doenca", "intervalo"])["dias"].median().reset_index()
     yearly_figure = _figure(px.line(yearly, x="ano", y="dias", color="doenca", line_dash="intervalo", markers=True,
                                     color_discrete_map=DISEASE_COLORS, title="Mediana dos intervalos por ano",
                                     labels={"dias": "Dias (mediana)", "ano": "", "doenca": "", "intervalo": ""}))
     yearly_figure.update_xaxes(type="category")
-    return box, yearly_figure
+    return distribution, yearly_figure
 
 
 def _table(filtered):
@@ -313,7 +219,7 @@ def _table(filtered):
     for column in ("Sintomas", "Notificação"):
         table[column] = table[column].dt.strftime("%d/%m/%Y")
     table = table.head(5000)
-    return table.to_dict("records"), [{"name": name, "id": name} for name in table.columns]
+    return table.astype(object).where(table.notna(), None).to_dict("records"), [{"name": name, "id": name} for name in table.columns]
 
 
 @app.callback(
