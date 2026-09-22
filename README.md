@@ -1,5 +1,5 @@
 <p align="center">
-<img width="300" height="300" alt="logo-vetorrisco-redonda" src="https://github.com/user-attachments/assets/36d2433d-6925-4163-97e8-5e10e11327cc" />
+<img width="200" height="200" alt="logo-vetor-risco" src="https://github.com/user-attachments/assets/1df5a034-f71c-48be-b56c-8cc319672997" />
 </p>
 
 <h1 style="font-size: 3em; font-weight: bold;">🦟 VetorRisco</h1>
