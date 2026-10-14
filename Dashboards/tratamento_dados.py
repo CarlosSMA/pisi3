@@ -114,8 +114,14 @@ ROSARINHO;SAN MARTIN;SANCHO;SANTANA;SANTO AMARO;SANTO ANTONIO;SAO JOSE;SITIO DOS
 TEJIPIO;TORRE;TORREAO;TORROES;TOTO;VARZEA;VASCO DA GAMA;ZUMBI""".replace("\n", ";").split(";"))
 
 
-def carregar_dados_tratados(pasta=None, incluir_incompletos=False, limite_sintomas=365):
+def carregar_dados_tratados(pasta=None, incluir_incompletos=False, limite_sintomas=365,
+                            pasta_saida=None):
     pasta = Path(pasta) if pasta else Path(__file__).resolve().parent.parent / 'data'
+    pasta_saida = Path(pasta_saida) if pasta_saida else None
+    if pasta_saida:
+        if pasta_saida.resolve() == pasta.resolve():
+            raise ValueError('A pasta de saída deve ser diferente da pasta de entrada.')
+        pasta_saida.mkdir(parents=True, exist_ok=True)
     frames = []
     for path in sorted(pasta.glob('*.csv')):
         disease = next((v for k, v in [('dengue', 'Dengue'), ('chik', 'Chikungunya'), ('zika', 'Zika')]
@@ -206,6 +212,8 @@ def carregar_dados_tratados(pasta=None, incluir_incompletos=False, limite_sintom
         out['obito'] = evolution.eq('2').where(evolution.isin(['1', '2', '3']))
         out['caso_encerrado'] = out.dt_encerramento.notna()
         out['casos'] = 1
+        if pasta_saida:
+            out.to_csv(pasta_saida / path.name, sep=';', index=False)
         frames.append(out.copy())
     if not frames:
         raise FileNotFoundError(f'Nenhum CSV de arboviroses em {pasta}')
@@ -241,9 +249,12 @@ def resumo_intervalos(frame):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    default_saida = Path(__file__).resolve().parent.parent / 'data' / 'dados_tratados'
+    parser.add_argument('--saida', type=Path, default=default_saida,
+                        help='Pasta para salvar uma versão tratada de cada CSV.')
     parser.add_argument('--auditoria', type=Path, help='Pasta para salvar o resumo e os registros sinalizados.')
     args = parser.parse_args()
-    dados = carregar_dados_tratados(incluir_incompletos=True)
+    dados = carregar_dados_tratados(incluir_incompletos=True, pasta_saida=args.saida)
     resumo = resumo_auditoria(dados)
     print(resumo.to_string())
     if args.auditoria:
