@@ -14,9 +14,12 @@ df = carregar_dados_tratados()
 app = dash.Dash(__name__)
 app.title = "Panorama Geral das Arboviroses"
 
-opcoes_anos = [{'label': str(ano), 'value': ano} for ano in sorted(df['ano'].unique())]
-opcoes_doencas = [{'label': d, 'value': d} for d in sorted(df['doenca'].unique())]
-opcoes_municipios = [{'label': m, 'value': m} for m in sorted(df['municipio'].unique())]
+opcoes_anos = [{'label': str(ano), 'value': ano}
+               for ano in sorted(df['ano'].unique())]
+opcoes_doencas = [{'label': d, 'value': d}
+                  for d in sorted(df['doenca'].unique())]
+opcoes_municipios = [{'label': m, 'value': m}
+                     for m in sorted(df['municipio'].unique())]
 
 # Estilos Visuais CSS
 card_style = {
@@ -41,17 +44,21 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
 
     # Cabeçalho do Dashboard
     html.Div(children=[
-        html.H1("🦟 Panorama Geral das Arboviroses", style={'color': '#1e293b', 'marginBottom': '5px'}),
-        html.H4("Pergunta Principal: Como os casos evoluíram ao longo do período?", style={'color': '#64748b', 'fontWeight': 'normal', 'marginTop': '0px'})
+        html.H1("🦟 Panorama Geral das Arboviroses", style={
+                'color': '#1e293b', 'marginBottom': '5px'}),
+        html.H4("Pergunta Principal: Como os casos evoluíram ao longo do período?", style={
+                'color': '#64748b', 'fontWeight': 'normal', 'marginTop': '0px'})
     ], style={'marginBottom': '20px'}),
 
     # Painel de Filtros (Ano, Doença e Município)
     html.Div(style=filter_style, children=[
-        html.H5("🔍 Filtros de Análise", style={'marginBottom': '12px', 'color': '#334155'}),
+        html.H5("🔍 Filtros de Análise", style={
+                'marginBottom': '12px', 'color': '#334155'}),
         html.Div(style={'display': 'flex', 'gap': '20px', 'flexWrap': 'wrap'}, children=[
 
             html.Div(style={'flex': '1', 'minWidth': '200px'}, children=[
-                html.Label("Ano:", style={'fontWeight': 'bold', 'color': '#475569'}),
+                html.Label("Ano:", style={
+                           'fontWeight': 'bold', 'color': '#475569'}),
                 dcc.Dropdown(
                     id='filtro-ano',
                     options=opcoes_anos,
@@ -62,7 +69,8 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
             ]),
 
             html.Div(style={'flex': '1', 'minWidth': '200px'}, children=[
-                html.Label("Doença:", style={'fontWeight': 'bold', 'color': '#475569'}),
+                html.Label("Doença:", style={
+                           'fontWeight': 'bold', 'color': '#475569'}),
                 dcc.Dropdown(
                     id='filtro-doenca',
                     options=opcoes_doencas,
@@ -73,7 +81,8 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
             ]),
 
             html.Div(style={'flex': '1', 'minWidth': '200px'}, children=[
-                html.Label("Município:", style={'fontWeight': 'bold', 'color': '#475569'}),
+                html.Label("Município:", style={
+                           'fontWeight': 'bold', 'color': '#475569'}),
                 dcc.Dropdown(
                     id='filtro-municipio',
                     options=opcoes_municipios,
@@ -88,20 +97,28 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
     # Cards / KPIs Indicadores
     html.Div(style={'display': 'flex', 'justifyContent': 'space-between', 'flexWrap': 'wrap', 'margin': '-8px'}, children=[
         html.Div(style=card_style, children=[
-            html.P("Total de Casos", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-total-casos', style={'color': '#0f172a', 'margin': '8px 0 0 0'})
+            html.P("Total de Casos", style={
+                   'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
+            html.H2(id='card-total-casos',
+                    style={'color': '#0f172a', 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
-            html.P("Doença Predominante", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-doenca-predominante', style={'color': "#f80303", 'margin': '8px 0 0 0'})
+            html.P("Doença Predominante", style={
+                   'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
+            html.H2(id='card-doenca-predominante',
+                    style={'color': "#f80303", 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
-            html.P("Ano de Maior Ocorrência", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-ano-pico', style={'color': '#d97706', 'margin': '8px 0 0 0'})
+            html.P("Ano de Maior Ocorrência", style={
+                   'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
+            html.H2(id='card-ano-pico',
+                    style={'color': '#d97706', 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
-            html.P("Semana Epidemiológica de Pico", style={'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
-            html.H2(id='card-semana-pico', style={'color': '#dc2626', 'margin': '8px 0 0 0'})
+            html.P("Semana Epidemiológica de Pico", style={
+                   'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
+            html.H2(id='card-semana-pico',
+                    style={'color': '#dc2626', 'margin': '8px 0 0 0'})
         ])
     ]),
 
@@ -122,6 +139,7 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
     ])
 ])
 
+
 @app.callback(
     [
         Output('card-total-casos', 'children'),
@@ -139,7 +157,8 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
 )
 def atualizar_dashboard(anos, doencas, municipios):
     if not anos or not doencas or not municipios:
-        fig_vazia = px.line(title="Selecione opções nos filtros para visualizar a análise.")
+        fig_vazia = px.line(
+            title="Selecione opções nos filtros para visualizar a análise.")
         return "0", "-", "-", "-", fig_vazia, fig_vazia
 
     df_filtrado = df[
@@ -149,23 +168,28 @@ def atualizar_dashboard(anos, doencas, municipios):
     ]
 
     if df_filtrado.empty:
-        fig_vazia = px.line(title="Nenhum registro encontrado com os filtros aplicados.")
+        fig_vazia = px.line(
+            title="Nenhum registro encontrado com os filtros aplicados.")
         return "0", "-", "-", "-", fig_vazia, fig_vazia
 
     total_casos = df_filtrado['casos'].sum()
     doenca_predominante = df_filtrado.groupby('doenca')['casos'].sum().idxmax()
     ano_pico = df_filtrado.groupby('ano')['casos'].sum().idxmax()
-    contagem_semanal = df_filtrado.groupby('semana_epidemiologica')['casos'].sum()
-    semana_pico = int(contagem_semanal.idxmax()) if not contagem_semanal.empty else None
+    contagem_semanal = df_filtrado.groupby(
+        'semana_epidemiologica')['casos'].sum()
+    semana_pico = int(contagem_semanal.idxmax()
+                      ) if not contagem_semanal.empty else None
 
     serie = df_filtrado.dropna(subset=['inicio_semana_notificacao'])
-    df_semana = serie.groupby(['inicio_semana_notificacao', 'doenca'])['casos'].sum().reset_index()
+    df_semana = serie.groupby(['inicio_semana_notificacao', 'doenca'])[
+        'casos'].sum().reset_index()
     if not df_semana.empty:
         semanas = pd.date_range(df_semana['inicio_semana_notificacao'].min(),
                                 df_semana['inicio_semana_notificacao'].max(), freq='W-SUN')
         grade = pd.MultiIndex.from_product([semanas, doencas],
-                                          names=['inicio_semana_notificacao', 'doenca'])
-        df_semana = df_semana.set_index(['inicio_semana_notificacao', 'doenca']).reindex(grade).reset_index()
+                                           names=['inicio_semana_notificacao', 'doenca'])
+        df_semana = df_semana.set_index(
+            ['inicio_semana_notificacao', 'doenca']).reindex(grade).reset_index()
     fig_linha = px.line(
         df_semana,
         x='inicio_semana_notificacao',
@@ -173,8 +197,10 @@ def atualizar_dashboard(anos, doencas, municipios):
         color='doenca',
         markers=True,
         title="<b>Evolução Semanal dos Casos por Doença</b>",
-        labels={'inicio_semana_notificacao': 'Início da semana de notificação', 'casos': 'Total de Casos', 'doenca': 'Doença'},
-        color_discrete_map={'Dengue': '#edf50b', 'Chikungunya': '#65008e', 'Zika': '#ff0000'}
+        labels={'inicio_semana_notificacao': 'Início da semana de notificação',
+                'casos': 'Total de Casos', 'doenca': 'Doença'},
+        color_discrete_map={'Dengue': '#cd73b8',
+                            'Chikungunya': '#9648BA', 'Zika': '#b96433'}
     )
     fig_linha.update_layout(
         template="plotly_white",
@@ -182,7 +208,8 @@ def atualizar_dashboard(anos, doencas, municipios):
         xaxis=dict(type='date')
     )
 
-    df_ano = df_filtrado.groupby(['ano', 'doenca'])['casos'].sum().reset_index()
+    df_ano = df_filtrado.groupby(['ano', 'doenca'])[
+        'casos'].sum().reset_index()
     fig_barra = px.bar(
         df_ano,
         x='ano',
@@ -191,7 +218,8 @@ def atualizar_dashboard(anos, doencas, municipios):
         barmode='group',
         title="<b>Comparativo Anual por Doença</b>",
         labels={'ano': 'Ano', 'casos': 'Total de Casos', 'doenca': 'Doença'},
-        color_discrete_map={'Dengue': '#edf50b', 'Chikungunya': '#65008e', 'Zika': '#ff0000'}
+        color_discrete_map={'Dengue': '#cd73b8',
+                            'Chikungunya': '#9648BA', 'Zika': '#b96433'}
     )
     fig_barra.update_layout(
         template="plotly_white",
@@ -201,6 +229,7 @@ def atualizar_dashboard(anos, doencas, municipios):
 
     total_formatado = f"{total_casos:,}".replace(",", ".")
     return total_formatado, str(doenca_predominante), str(ano_pico), (f"Semana {semana_pico}" if semana_pico is not None else "Não informado"), fig_linha, fig_barra
+
 
 if __name__ == '__main__':
     app.run(debug=False, port=8050)
