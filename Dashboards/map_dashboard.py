@@ -54,8 +54,8 @@ def criar_dropdown(id_elem, rotulo, lista, multi=True, valor_padrao=None):
 
 kpis = [
     ("Total de Bairros Notificados", "card-total-bairros", "#000000"),
-    ("Bairro / Ponto de Pico", "card-bairro-pico", "#dc2626"),
-    ("Casos na Localidade Líder", "card-casos-bairro-pico", "#ea580c"),
+    ("Bairro / Ponto de Pico", "card-bairro-pico", "#000000"),
+    ("Casos na Localidade Líder", "card-casos-bairro-pico", "#000000"),
     ("Média de Casos por Ponto", "card-media-bairro", "#000000")
 ]
 

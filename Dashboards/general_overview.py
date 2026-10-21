@@ -106,19 +106,19 @@ app.layout = html.Div(style={'backgroundColor': '#f4f6f9', 'fontFamily': 'Segoe 
             html.P("Doença Predominante", style={
                    'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
             html.H2(id='card-doenca-predominante',
-                    style={'color': "#f80303", 'margin': '8px 0 0 0'})
+                    style={'color': "#000000", 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
             html.P("Ano de Maior Ocorrência", style={
                    'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
             html.H2(id='card-ano-pico',
-                    style={'color': '#d97706', 'margin': '8px 0 0 0'})
+                    style={'color': '#000000', 'margin': '8px 0 0 0'})
         ]),
         html.Div(style=card_style, children=[
             html.P("Semana Epidemiológica de Pico", style={
                    'color': '#64748b', 'fontSize': '14px', 'margin': '0'}),
             html.H2(id='card-semana-pico',
-                    style={'color': '#dc2626', 'margin': '8px 0 0 0'})
+                    style={'color': "#000000", 'margin': '8px 0 0 0'})
         ])
     ]),
 
