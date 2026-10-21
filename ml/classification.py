@@ -47,7 +47,7 @@ def treinar_classificador(
     cluster_ids = model.fit_predict(componentes)
     means = pd.Series(alvo.to_numpy()).groupby(cluster_ids).mean().sort_values()
     labels = {
-        int(cluster_id): f"grupo_{position + 1}_media_{mean:.2f}"
+        int(cluster_id): f"Grupo {position + 1} | Média: {mean:.2f}"
         for position, (cluster_id, mean) in enumerate(means.items())
     }
     report = {
