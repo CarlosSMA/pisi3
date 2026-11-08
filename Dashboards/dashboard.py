@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html
+from dash import Input, Output, dcc, html
 
 if __package__:
     from . import clinical_dashboard
@@ -95,6 +95,21 @@ app.layout = html.Div(
         html.Div(id="dashboard-content", style={"padding": "25px"}),
     ],
 )
+
+
+@app.callback(
+    Output("dashboard-content", "children"),
+    Input("dashboard-tabs", "value"),
+)
+def render_dashboard(tab):
+    dashboards = {
+        "tab-geral": general_overview.app.layout,
+        "tab-clinico": clinical_dashboard.app.layout,
+        "tab-gravidade": severity_dashboard.app.layout,
+        "tab-demografico": demographic_dashboard.app.layout,
+        "tab-geoespacial": map_dashboard.app.layout,
+    }
+    return dashboards[tab]
 
 
 if __name__ == "__main__":
