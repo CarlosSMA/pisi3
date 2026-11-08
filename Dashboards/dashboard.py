@@ -112,5 +112,99 @@ def render_dashboard(tab):
     return dashboards[tab]
 
 
+@app.callback(
+    Output("card-total-casos", "children"),
+    Output("card-doenca-predominante", "children"),
+    Output("card-ano-pico", "children"),
+    Output("card-semana-pico", "children"),
+    Output("grafico-linha-semana", "figure"),
+    Output("grafico-barra-ano", "figure"),
+    Input("filtro-ano", "value"),
+    Input("filtro-doenca", "value"),
+    Input("filtro-municipio", "value"),
+)
+def update_general(anos, doencas, municipios):
+    return general_overview.atualizar_dashboard(anos, doencas, municipios)
+
+
+@app.callback(
+    Output("kpi-total", "children"),
+    Output("kpi-confirmados", "children"),
+    Output("kpi-laboratorio", "children"),
+    Output("kpi-notificacao", "children"),
+    Output("kpi-encerramento", "children"),
+    Output("grafico-sintomas", "figure"),
+    Output("grafico-sintomas-caracteristicos", "figure"),
+    Output("grafico-criterio", "figure"),
+    Output("grafico-classificacao", "figure"),
+    Output("grafico-exames", "figure"),
+    Output("grafico-sorotipo", "figure"),
+    Output("grafico-intervalos", "figure"),
+    Output("grafico-intervalos-ano", "figure"),
+    Output("tabela", "data"),
+    Output("tabela", "columns"),
+    Input("filtro-ano", "value"),
+    Input("filtro-doenca", "value"),
+    Input("filtro-situacao", "value"),
+    Input("filtro-semana", "value"),
+)
+def update_clinical(selected_years, selected_diseases, selected_statuses, week_range):
+    return clinical_dashboard.atualizar_dashboard(
+        selected_years, selected_diseases, selected_statuses, week_range
+    )
+
+
+@app.callback(
+    Output("card-taxa-hosp", "children"),
+    Output("card-casos-graves", "children"),
+    Output("card-obitos", "children"),
+    Output("card-tempo-medio", "children"),
+    Output("grafico-comorbidades", "figure"),
+    Output("grafico-gravidade-doenca", "figure"),
+    Input("filtro-ano", "value"),
+    Input("filtro-doenca", "value"),
+    Input("filtro-municipio", "value"),
+)
+def update_severity(anos, doencas, municipios):
+    return severity_dashboard.atualizar_dashboard(anos, doencas, municipios)
+
+
+@app.callback(
+    Output("total", "children"),
+    Output("idade", "children"),
+    Output("sexo", "children"),
+    Output("raca", "children"),
+    Output("grafico-idade", "figure"),
+    Output("grafico-sexo", "figure"),
+    Output("grafico-raca", "figure"),
+    Output("grafico-ano", "figure"),
+    Input("filtro-ano", "value"),
+    Input("filtro-doenca", "value"),
+    Input("filtro-municipio", "value"),
+)
+def update_demographic(selected_years, selected_diseases, selected_municipalities):
+    return demographic_dashboard.atualizar_dashboard(
+        selected_years, selected_diseases, selected_municipalities
+    )
+
+
+@app.callback(
+    Output("card-total-bairros", "children"),
+    Output("card-bairro-pico", "children"),
+    Output("card-casos-bairro-pico", "children"),
+    Output("card-media-bairro", "children"),
+    Output("mapa-real-bairros", "figure"),
+    Output("grafico-ranking-bairros", "figure"),
+    Input("filtro-perspectiva", "value"),
+    Input("filtro-ano", "value"),
+    Input("filtro-doenca", "value"),
+    Input("filtro-municipio", "value"),
+)
+def update_map(perspectiva, anos, doencas, municipios):
+    return map_dashboard.atualizar_dashboard(
+        perspectiva, anos, doencas, municipios
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=False, port=8050)
