@@ -1,5 +1,5 @@
 import dash
-from dash import html
+from dash import dcc, html
 
 if __package__:
     from . import clinical_dashboard
@@ -36,7 +36,64 @@ app.layout = html.Div(
         "fontFamily": "Segoe UI, sans-serif",
         "minHeight": "100vh",
     },
-    children=[],
+    children=[
+        html.Div(
+            style={
+                "backgroundColor": "#0f172a",
+                "color": "#ffffff",
+                "padding": "20px 30px",
+            },
+            children=[
+                html.H1("VetorRisco", style={"margin": "0", "fontSize": "28px"}),
+                html.P(
+                    "Monitorização interativa das arboviroses",
+                    style={"margin": "5px 0 0", "color": "#cbd5e1"},
+                ),
+            ],
+        ),
+        dcc.Tabs(
+            id="dashboard-tabs",
+            value="tab-geral",
+            parent_style={
+                "backgroundColor": "#ffffff",
+                "padding": "0 25px",
+                "boxShadow": "0 2px 8px rgba(15, 23, 42, .08)",
+            },
+            children=[
+                dcc.Tab(
+                    label="Panorama geral",
+                    value="tab-geral",
+                    style=TAB_STYLE,
+                    selected_style=TAB_SELECTED_STYLE,
+                ),
+                dcc.Tab(
+                    label="Clínico",
+                    value="tab-clinico",
+                    style=TAB_STYLE,
+                    selected_style=TAB_SELECTED_STYLE,
+                ),
+                dcc.Tab(
+                    label="Gravidade",
+                    value="tab-gravidade",
+                    style=TAB_STYLE,
+                    selected_style=TAB_SELECTED_STYLE,
+                ),
+                dcc.Tab(
+                    label="Demográfico",
+                    value="tab-demografico",
+                    style=TAB_STYLE,
+                    selected_style=TAB_SELECTED_STYLE,
+                ),
+                dcc.Tab(
+                    label="Geoespacial",
+                    value="tab-geoespacial",
+                    style=TAB_STYLE,
+                    selected_style=TAB_SELECTED_STYLE,
+                ),
+            ],
+        ),
+        html.Div(id="dashboard-content", style={"padding": "25px"}),
+    ],
 )
 
 
