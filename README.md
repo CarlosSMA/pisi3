@@ -39,3 +39,23 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 **4. Executar a aplicação**
+
+## Conversão dos dados tratados para Parquet
+
+O script `data/dados_tratados/converter_para_parquet.sh` usa o CLI do DuckDB
+para converter os CSVs tratados. Ele cria um arquivo `.parquet` ao lado de
+cada CSV e mantém os CSVs originais.
+
+Para executar a conversão manualmente:
+
+```bash
+cd data/dados_tratados
+bash converter_para_parquet.sh
+```
+
+Se os arquivos `.parquet` já existirem, remova-os antes de executar novamente:
+
+```bash
+rm -- data/dados_tratados/*.parquet
+bash data/dados_tratados/converter_para_parquet.sh
+```
