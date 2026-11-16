@@ -30,7 +30,12 @@ def avaliar_kmeans(
         silhouette[k] = float(silhouette_score(componentes, labels))
     if not silhouette:
         raise ValueError("Dados insuficientes para avaliar clusters")
-    best_k = max(silhouette, key=silhouette.get)
+    # A segmentação operacional deve ter ao menos três grupos. Mantemos a
+    # avaliação de k=2 no relatório como referência, mas não a selecionamos.
+    elegiveis = {k: score for k, score in silhouette.items() if k > 2}
+    if not elegiveis:
+        raise ValueError("Dados insuficientes: são necessários ao menos 3 clusters")
+    best_k = max(elegiveis, key=elegiveis.get)
     return best_k, inertia, silhouette
 
 
@@ -53,6 +58,9 @@ def treinar_classificador(
     report = {
         "random_state": random_state,
         "k_selecionado": best_k,
+        "criterio_selecao": "maior silhueta entre k > 2",
+        "melhor_k_global": max(silhouette, key=silhouette.get),
+        "silhueta_melhor_k_global": max(silhouette.values()),
         "inercia_elbow": {str(k): value for k, value in inertia.items()},
         "silhueta_por_k": {str(k): value for k, value in silhouette.items()},
         "silhueta_selecionada": silhouette[best_k],
