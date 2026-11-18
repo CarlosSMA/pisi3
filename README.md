@@ -40,6 +40,37 @@ pip install -r requirements.txt
 
 **4. Executar a aplicação**
 
+Para treinar o modelo e gerar as previsões, métricas e gráficos:
+
+```bash
+python ml/main.py
+```
+
+O script aceita as seguintes flags:
+
+| Flag | Padrão | Descrição |
+| --- | --- | --- |
+| `--dados CAMINHO` | `data/dados_tratados` | Diretório com os dados tratados. |
+| `--saida CAMINHO` | `previsoes_carga.csv` | Arquivo CSV onde serão salvas as previsões. |
+| `--metricas CAMINHO` | `metricas_carga.json` | Arquivo JSON onde serão salvas as métricas. |
+| `--horizonte N` | `1` | Horizonte de previsão em semanas. |
+| `--graficos CAMINHO` | `graficos_classificacao` | Pasta onde serão salvos os gráficos. |
+| `--quantil-graficos VALOR` | `0.98` | Quantil máximo exibido nos gráficos. |
+| `--classificacao CAMINHO` | `resultados_classificacao` | Pasta para tabelas de classificação, comparação e SHAP. |
+
+Exemplo com parâmetros personalizados:
+
+```bash
+python ml/main.py \
+  --dados data/dados_tratados \
+  --saida resultados/previsoes_carga.csv \
+  --metricas resultados/metricas_carga.json \
+  --horizonte 4 \
+  --graficos resultados/graficos \
+  --quantil-graficos 0.99 \
+  --classificacao resultados/classificacao
+```
+
 ## Conversão dos dados tratados para Parquet
 
 O script `data/dados_tratados/converter_para_parquet.sh` usa o CLI do DuckDB
