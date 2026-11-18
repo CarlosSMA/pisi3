@@ -42,7 +42,12 @@ def main() -> None:
         from .plots import gerar_graficos_regressao
     else:
         from plots import gerar_graficos_regressao
-    gerar_graficos_regressao(sistema.classification_test, args.graficos, args.quantil_graficos)
+    gerar_graficos_regressao(
+        sistema.classification_test,
+        args.graficos,
+        args.quantil_graficos,
+        cluster_report=sistema.metrics["clustering"],
+    )
     latest = features["inicio_semana"].max()
     previsoes = sistema.prever(features[features["inicio_semana"] == latest])
     args.saida.parent.mkdir(parents=True, exist_ok=True)
