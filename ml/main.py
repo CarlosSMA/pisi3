@@ -26,7 +26,7 @@ def main() -> None:
         "--graficos",
         type=Path,
         default=Path("graficos_classificacao"),
-        help="Pasta onde serão salvos os gráficos da regressão e dos blocos.",
+        help="Pasta onde será salvo o gráfico da regressão com as faixas de volume.",
     )
     parser.add_argument(
         "--quantil-graficos",
@@ -46,7 +46,6 @@ def main() -> None:
         sistema.classification_test,
         args.graficos,
         args.quantil_graficos,
-        cluster_report=sistema.metrics["clustering"],
     )
     latest = features["inicio_semana"].max()
     previsoes = sistema.prever(features[features["inicio_semana"] == latest])

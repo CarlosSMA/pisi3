@@ -1,126 +1,64 @@
-from __future__ import annotations
+"""Classificação operacional da previsão: faixa de volume e capacidade.
 
-from typing import Any
+A faixa de volume NÃO vem de clusterização. Ela é definida por limiares
+históricos (quantis do alvo no treino), como recomenda o
+PLANO_PREVISAO_CARGA_TRABALHO.md. A clusterização das unidades de saúde é uma
+análise separada, em ``clustering.py``.
+"""
+
+from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 
 if __package__:
-    from .config import K_RANGE, RANDOM_STATE
+    from .config import FAIXAS_VOLUME, QUANTIS_FAIXA_VOLUME
 else:
-    from config import K_RANGE, RANDOM_STATE
+    from config import FAIXAS_VOLUME, QUANTIS_FAIXA_VOLUME
 
 
-def avaliar_kmeans(
-    componentes: np.ndarray, k_range=K_RANGE, random_state: int = RANDOM_STATE
-) -> tuple[int, dict[int, float], dict[int, float]]:
-    """Calcula inércia (Elbow) e silhueta para cada quantidade de clusters."""
-    from sklearn.cluster import KMeans
-    from sklearn.metrics import silhouette_score
+def definir_limiares_faixa(
+    alvo_treino: pd.Series, quantis: tuple[float, ...] = QUANTIS_FAIXA_VOLUME
+) -> list[float]:
+    """Limiares das faixas a partir das semanas de treino com notificação.
 
-    inertia: dict[int, float] = {}
-    silhouette: dict[int, float] = {}
-    samples = len(componentes)
-    for k in k_range:
-        if k >= samples:
-            continue
-        model = KMeans(n_clusters=k, n_init=20, random_state=random_state)
-        labels = model.fit_predict(componentes)
-        inertia[k] = float(model.inertia_)
-        silhouette[k] = float(silhouette_score(componentes, labels))
-    if not silhouette:
-        raise ValueError("Dados insuficientes para avaliar clusters")
-    # A segmentação operacional deve ter ao menos três grupos. Mantemos a
-    # avaliação de k=2 no relatório como referência, mas não a selecionamos.
-    elegiveis = {k: score for k, score in silhouette.items() if k > 2}
-    if not elegiveis:
-        raise ValueError("Dados insuficientes: são necessários ao menos 3 clusters")
-    best_k = max(elegiveis, key=elegiveis.get)
-    return best_k, inertia, silhouette
-
-def avaliar_dbscan(
-    componentes: np.ndarray,
-    eps_values: tuple[float, ...] = (0.3, 0.5, 0.8, 1.0, 1.2),
-    min_samples: int = 10,
-) -> dict[str, Any]:
-    """Avalia clusterização baseada em densidade (DBSCAN) testando diferentes raios."""
-    from sklearn.cluster import DBSCAN
-    from sklearn.metrics import silhouette_score
-
-    resultados: dict[str, Any] = {}
-    melhor_silhueta = -1.0
-    melhor_eps = None
-
-    for eps in eps_values:
-        model = DBSCAN(eps=eps, min_samples=min_samples)
-        labels = model.fit_predict(componentes)
-        
-        n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-        n_outliers = int(np.sum(labels == -1))
-
-        sil = None
-        if n_clusters >= 2:
-            sil = float(silhouette_score(componentes, labels))
-            if sil > melhor_silhueta:
-                melhor_silhueta = sil
-                melhor_eps = eps
-
-        resultados[str(eps)] = {
-            "n_clusters": n_clusters,
-            "n_outliers": n_outliers,
-            "silhueta": sil,
-        }
-
-    return {
-        "algoritmo": "DBSCAN",
-        "melhor_eps": melhor_eps,
-        "melhor_silhueta": melhor_silhueta if melhor_eps is not None else None,
-        "detalhes_por_eps": resultados,
-    }
-
-def treinar_classificador(
-    componentes: np.ndarray,
-    alvo: pd.Series,
-    random_state: int = RANDOM_STATE,
-) -> tuple[Any, int, dict[str, Any]]:
-    """Seleciona k, treina K-Means e cria rótulos ordenados por volume médio."""
-    from sklearn.cluster import KMeans
-
-    best_k, inertia, silhouette = avaliar_kmeans(componentes, random_state=random_state)
-    model = KMeans(n_clusters=best_k, n_init=20, random_state=random_state)
-    relatorio_dbscan = avaliar_dbscan(componentes)
-    cluster_ids = model.fit_predict(componentes)
-    means = pd.Series(alvo.to_numpy()).groupby(cluster_ids).mean().sort_values()
-    labels = {
-        int(cluster_id): f"Grupo {position + 1} | Média: {mean:.2f}"
-        for position, (cluster_id, mean) in enumerate(means.items())
-    }
-    report = {
-        "random_state": random_state,
-        "k_selecionado": best_k,
-        "criterio_selecao": "maior silhueta entre k > 2",
-        "melhor_k_global": max(silhouette, key=silhouette.get),
-        "silhueta_melhor_k_global": max(silhouette.values()),
-        "inercia_elbow": {str(k): value for k, value in inertia.items()},
-        "silhueta_por_k": {str(k): value for k, value in silhouette.items()},
-        "silhueta_selecionada": silhouette[best_k],
-        "media_alvo_por_grupo": {
-            labels[int(cluster_id)]: float(mean) for cluster_id, mean in means.items()
-        },
-        "comparacao_dbscan": relatorio_dbscan,
-    }
-    model.cluster_labels_ = labels
-    return model, best_k, report
+    Cerca de 79% das semanas × unidade × agravo têm zero notificações, então
+    quantis sobre todas as semanas colapsariam em zero. Usamos apenas as
+    semanas com pelo menos uma notificação.
+    """
+    positivos = pd.to_numeric(alvo_treino, errors="coerce")
+    positivos = positivos[positivos > 0]
+    if positivos.empty:
+        raise ValueError("O treino não possui semanas com notificações")
+    limiares = [float(positivos.quantile(q)) for q in quantis]
+    if any(b <= a for a, b in zip(limiares, limiares[1:])):
+        raise ValueError(f"Limiares de faixa não são crescentes: {limiares}")
+    return limiares
 
 
-def rotular_clusters(model: Any, componentes: np.ndarray) -> pd.Series:
-    """Converte IDs arbitrários do K-Means em rótulos estáveis e legíveis."""
-    ids = model.predict(componentes)
-    return pd.Series(
-        [model.cluster_labels_[int(cluster_id)] for cluster_id in ids],
-        index=getattr(componentes, "index", None),
-        dtype="string",
+def rotular_faixa_volume(valores, limiares: list[float]) -> pd.Series:
+    """baixo ≤ L1 < moderado ≤ L2 < alto ≤ L3 < muito alto."""
+    if len(limiares) != len(FAIXAS_VOLUME) - 1:
+        raise ValueError("Número de limiares incompatível com FAIXAS_VOLUME")
+    valores = np.asarray(valores, dtype=float)
+    indices = np.searchsorted(np.asarray(limiares), valores, side="left")
+    return pd.Series(np.asarray(FAIXAS_VOLUME, dtype=object)[indices], dtype="string")
+
+
+def avaliar_faixas(observado: pd.Series, previsto: pd.Series) -> dict[str, object]:
+    """Acurácia e matriz de confusão entre faixa observada e faixa prevista."""
+    observado = pd.Categorical(observado, categories=FAIXAS_VOLUME)
+    previsto = pd.Categorical(previsto, categories=FAIXAS_VOLUME)
+    matriz = pd.crosstab(observado, previsto, dropna=False).reindex(
+        index=FAIXAS_VOLUME, columns=FAIXAS_VOLUME, fill_value=0
     )
+    return {
+        "acuracia": float(np.mean(np.asarray(observado) == np.asarray(previsto))),
+        "matriz_confusao": {
+            "linhas_observado_colunas_previsto": FAIXAS_VOLUME,
+            "valores": matriz.astype(int).to_numpy().tolist(),
+        },
+    }
 
 
 def classificar_capacidade(previsoes: pd.DataFrame, capacidades: pd.DataFrame) -> pd.DataFrame:

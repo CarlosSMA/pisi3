@@ -13,8 +13,10 @@ BASELINE_COLUMNS = [
     "baseline_media_historica",
 ]
 
-# Intervalos de contagem que preservam a resolução dos volumes baixos, onde
-# está concentrada a maior parte dos grupos semana × unidade × agravo.
 RANDOM_STATE = 42
-PCA_COMPONENTS = 2
-K_RANGE = range(2, 9)
+
+# Faixas de volume da previsão: limiares dados pelos quantis das semanas de
+# treino com pelo menos uma notificação (≈79% das semanas têm zero, então
+# quantis sobre todas as semanas colapsariam em zero).
+FAIXAS_VOLUME = ["baixo", "moderado", "alto", "muito alto"]
+QUANTIS_FAIXA_VOLUME = (0.50, 0.75, 0.90)

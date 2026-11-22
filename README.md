@@ -73,6 +73,12 @@ python ml/main.py \
   --classificacao resultados/classificacao
 ```
 
+A coluna `faixa_volume` das previsões (baixo, moderado, alto, muito alto) é
+definida por limiares históricos: os quantis 0,50 / 0,75 / 0,90 das semanas de
+treino com pelo menos uma notificação (hoje 2, 4 e 8 notificações). Ela **não**
+vem de clusterização. `metricas_carga.json` traz os limiares, a acurácia e a
+matriz de confusão entre faixa observada e faixa prevista.
+
 ## 🩹 Qualidade dos dados: códigos das unidades de saúde
 
 Nos arquivos `dengue-2022.csv` e `dengue-2023.csv` o código CNES da unidade
