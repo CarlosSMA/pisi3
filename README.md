@@ -73,6 +73,14 @@ python ml/main.py \
   --classificacao resultados/classificacao
 ```
 
+## 🩹 Qualidade dos dados: códigos das unidades de saúde
+
+Nos arquivos `dengue-2022.csv` e `dengue-2023.csv` o código CNES da unidade
+perdeu os zeros à esquerda ("604" em vez de "0000604"). Assim a mesma unidade
+aparecia como duas entidades, e a série de cada uma parecia começar ou terminar
+na virada de 2023 para 2024. O carregamento (`normalizar_codigo_unidade`, em
+`ml/data.py`) agora padroniza todos os códigos com 7 dígitos.
+
 ## Conversão dos dados tratados para Parquet
 
 O script `data/dados_tratados/converter_para_parquet.sh` usa o CLI do DuckDB
