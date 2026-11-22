@@ -10,12 +10,12 @@ if __package__:
     from .classification import rotular_clusters, treinar_classificador
     from .config import BASELINE_COLUMNS, FEATURE_COLUMNS, PCA_COMPONENTS, RANDOM_STATE
     from .features import adicionar_baselines, criar_features
-    from .metrics import calcular_metricas
+    from .metrics import calcular_metricas, calcular_metricas_justica
 else:
     from classification import rotular_clusters, treinar_classificador
     from config import BASELINE_COLUMNS, FEATURE_COLUMNS, PCA_COMPONENTS, RANDOM_STATE
     from features import adicionar_baselines, criar_features
-    from metrics import calcular_metricas
+    from metrics import calcular_metricas, calcular_metricas_justica
 
 
 @dataclass
@@ -92,6 +92,15 @@ def treinar_sistema(tabela: pd.DataFrame, horizonte: int = 1, proporcao_teste: f
     metrics["baselines"] = {
         name: calcular_metricas(test["alvo"], test[name].fillna(train["alvo"].mean()))
         for name in BASELINE_COLUMNS
+    }
+    avaliacao_justica = test[["unidade_saude", "doenca", "alvo"]].assign(
+        previsto_continuo=predicted
+    )
+    metrics["justica"] = {
+        "unidade_saude": calcular_metricas_justica(
+            avaliacao_justica, "unidade_saude"
+        ),
+        "doenca": calcular_metricas_justica(avaliacao_justica, "doenca"),
     }
     return SistemaPrevisao(
         regressor, classificador, preprocessor, scaler, cutoff,
