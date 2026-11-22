@@ -35,6 +35,8 @@ def _linhas_grupos(metricas, nome_grupo):
             "RMSE": round(valores["rmse"], 3),
             "Erro percentual": round(valores["erro_percentual"], 2),
             "Viés médio": round(valores["viés_médio"], 3),
+            "Média observada": round(valores.get("media_observada", 0), 3),
+            "MAE relativo": round(valores.get("mae_relativo", 0), 3),
         }
         for grupo, valores in dados.get("grupos", {}).items()
     ]
@@ -63,6 +65,14 @@ def _grafico_barras(linhas, titulo):
     return fig
 
 
+def _selecao_maior_disparidade(linhas, limite=5):
+    if not linhas:
+        return []
+    frame = pd.DataFrame(linhas)
+    frame = frame.sort_values("MAE", ascending=False)
+    return frame.head(limite).to_dict("records")
+
+
 def _tabela(id_tabela):
     return dash_table.DataTable(
         id=id_tabela,
@@ -73,6 +83,8 @@ def _tabela(id_tabela):
             {"name": "RMSE", "id": "RMSE"},
             {"name": "Erro percentual", "id": "Erro percentual"},
             {"name": "Viés médio", "id": "Viés médio"},
+            {"name": "Média observada", "id": "Média observada"},
+            {"name": "MAE relativo", "id": "MAE relativo"},
         ],
         data=[],
         sort_action="native",
@@ -152,10 +164,19 @@ def atualizar_dashboard():
     diferenca_unidade = justica["unidade_saude"]["disparidades"]["mae_diferenca"]
     diferenca_doenca = justica["doenca"]["disparidades"]["mae_diferenca"]
     mae_global = metricas["regressao"]["mae"]
+    limiar_desempenho = mae_global * 1.5
+    unidades_acima = [
+        unidade["Grupo"]
+        for unidade in unidades
+        if unidade["MAE"] > limiar_desempenho
+    ]
+    unidades_destacadas = _selecao_maior_disparidade(unidades)
 
     aviso = html.Div(
         "Viés positivo indica subestimação; viés negativo indica superestimação. "
-        "Grupos com menos de 20 amostras não são exibidos.",
+        f"Grupos com menos de 20 amostras não são exibidos. "
+        f"{len(unidades_acima)} unidade(s) têm MAE acima de 1,5 vezes o MAE global "
+        f"({limiar_desempenho:.3f}).",
         style={
             "backgroundColor": "#eff6ff",
             "color": "#1e3a8a",
@@ -170,7 +191,7 @@ def atualizar_dashboard():
         f"{mae_global:.3f}",
         f"{diferenca_unidade:.3f}",
         f"{diferenca_doenca:.3f}",
-        _grafico_barras(unidades, "MAE por unidade de saúde"),
+        _grafico_barras(unidades_destacadas, "Cinco unidades com maior MAE"),
         _grafico_barras(doencas, "MAE por agravo"),
         unidades,
         doencas,

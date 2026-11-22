@@ -36,13 +36,17 @@ def calcular_metricas_justica(
         percentual_error = (
             absolute_error / np.maximum(y_true.to_numpy(dtype=float), 1) * 100
         )
+        media_observada = float(y_true.mean())
+        mae = float(absolute_error.mean())
 
         por_grupo[str(grupo)] = {
             "amostras": int(len(indices)),
-            "mae": float(absolute_error.mean()),
+            "mae": mae,
             "rmse": float(np.sqrt(np.mean(error.to_numpy(dtype=float) ** 2))),
             "erro_percentual": float(np.mean(percentual_error)),
             "viés_médio": float(error.mean()),
+            "media_observada": media_observada,
+            "mae_relativo": float(mae / max(media_observada, 1)),
         }
 
     grupos_com_dados = list(por_grupo)

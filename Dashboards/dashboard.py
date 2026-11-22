@@ -5,6 +5,7 @@ if __package__:
     from . import clinical_dashboard
     from . import demographic_dashboard
     from . import fairness_dashboard
+    from . import fairness_dashboard
     from . import general_overview
     from . import map_dashboard
     from . import severity_dashboard
