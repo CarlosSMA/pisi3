@@ -4,12 +4,15 @@ from dash import Input, Output, dcc, html
 if __package__:
     from . import clinical_dashboard
     from . import demographic_dashboard
+    from . import fairness_dashboard
+    from . import fairness_dashboard
     from . import general_overview
     from . import map_dashboard
     from . import severity_dashboard
 else:
     import clinical_dashboard
     import demographic_dashboard
+    import fairness_dashboard
     import general_overview
     import map_dashboard
     import severity_dashboard
@@ -90,6 +93,12 @@ app.layout = html.Div(
                     style=TAB_STYLE,
                     selected_style=TAB_SELECTED_STYLE,
                 ),
+                dcc.Tab(
+                    label="Justiça operacional",
+                    value="tab-justica",
+                    style=TAB_STYLE,
+                    selected_style=TAB_SELECTED_STYLE,
+                ),
             ],
         ),
         html.Div(id="dashboard-content", style={"padding": "25px"}),
@@ -108,6 +117,7 @@ def render_dashboard(tab):
         "tab-gravidade": severity_dashboard.app.layout,
         "tab-demografico": demographic_dashboard.app.layout,
         "tab-geoespacial": map_dashboard.app.layout,
+        "tab-justica": fairness_dashboard.app.layout,
     }
     return dashboards[tab]
 
@@ -204,6 +214,21 @@ def update_map(perspectiva, anos, doencas, municipios):
     return map_dashboard.atualizar_dashboard(
         perspectiva, anos, doencas, municipios
     )
+
+
+@app.callback(
+    Output("justica-aviso", "children"),
+    Output("justica-mae", "children"),
+    Output("justica-diferenca-unidade", "children"),
+    Output("justica-diferenca-doenca", "children"),
+    Output("grafico-mae-unidades", "figure"),
+    Output("grafico-mae-doencas", "figure"),
+    Output("tabela-unidades", "data"),
+    Output("tabela-doencas", "data"),
+    Input("dashboard-tabs", "value"),
+)
+def update_fairness(tab):
+    return fairness_dashboard.atualizar_dashboard()
 
 
 if __name__ == "__main__":

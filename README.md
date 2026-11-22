@@ -20,6 +20,8 @@ A aplicação utiliza dados públicos de saúde epidemiológica do Recife sobre 
 
 ***Geoespacial (map_dashboard.py):** Mapeamento territorial e concentração dos casos na cidade do Recife.*
 
+***Justiça operacional (fairness_dashboard.py):** Comparação do MAE, RMSE, erro percentual e viés do modelo entre unidades de saúde e agravos.*
+
 ## 📁 Modo de uso
 
 **1. Clonar o repositório**
