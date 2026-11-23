@@ -1,7 +1,7 @@
 """Gráficos da clusterização das unidades de saúde.
 
 Os arquivos são numerados na ordem da
-análise: variáveis → PCA → K-Means → visualização → perfis.
+análise: variáveis → PCA → K-Means → HDBSCAN/DBSCAN → visualização → perfis.
 """
 
 from __future__ import annotations
@@ -13,10 +13,10 @@ import numpy as np
 import pandas as pd
 
 if __package__:
-    from .clustering import TODAS_FEATURES, ResultadoClusterizacao
+    from .clustering import ROTULO_RUIDO, TODAS_FEATURES, ResultadoClusterizacao
     from .config import CLUSTER_FEATURES, PCA_VARIANCIA_MINIMA
 else:
-    from clustering import TODAS_FEATURES, ResultadoClusterizacao
+    from clustering import ROTULO_RUIDO, TODAS_FEATURES, ResultadoClusterizacao
     from config import CLUSTER_FEATURES, PCA_VARIANCIA_MINIMA
 
 # Paleta categórica em ordem fixa (nunca reciclada). Em gráficos de dispersão
@@ -251,6 +251,59 @@ def grafico_kmeans_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path
     )
 
 
+def grafico_hdbscan_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path:
+    plt = _pyplot()
+    perfil = resultado.perfil
+    variancia = resultado.relatorio["pca"]["variancia_por_componente"]
+    selecionado = resultado.relatorio["hdbscan"]["selecionado"]
+    figura, eixo = plt.subplots(figsize=(10, 7))
+    ruido = perfil["cluster_hdbscan"].eq(ROTULO_RUIDO)
+    eixo.scatter(perfil.loc[ruido, "pc1"], perfil.loc[ruido, "pc2"], s=60, marker="x",
+                 color=TINTA_SECUNDARIA, label=f"Atípicas / ruído ({ruido.sum()})")
+    for posicao, cluster in enumerate(sorted(perfil.loc[~ruido, "cluster_hdbscan"].unique())):
+        selecao = perfil["cluster_hdbscan"].eq(cluster)
+        nome = perfil.loc[selecao, "nome_cluster_hdbscan"].iloc[0]
+        eixo.scatter(perfil.loc[selecao, "pc1"], perfil.loc[selecao, "pc2"],
+                     s=30 + 70 * perfil.loc[selecao, "prob_hdbscan"], color=CORES[posicao],
+                     edgecolors=SUPERFICIE, linewidths=1.5, label=f"{nome} ({selecao.sum()})")
+    n = resultado.relatorio["pca"]["n_componentes"]
+    eixo.set(xlabel=f"PC1 ({variancia[0]:.0%})", ylabel=f"PC2 ({variancia[1]:.0%})",
+             title=f"HDBSCAN (min_cluster_size={selecionado['min_cluster_size']}, "
+                   f"min_samples={selecionado['min_samples']})")
+    eixo.text(0, 1.01, f"Tamanho do ponto = probabilidade de pertencer ao cluster. O agrupamento usa os "
+                       f"{n} componentes retidos;\nunidades atípicas no meio da nuvem se afastam nos "
+                       f"componentes não exibidos.", transform=eixo.transAxes, fontsize=9,
+              color=TINTA_SECUNDARIA, va="bottom")
+    eixo.set_title(eixo.get_title(loc="left"), loc="left", pad=34)
+    eixo.grid(True)
+    eixo.legend(loc="best")
+    return _salvar(figura, destino)
+
+
+def grafico_k_distancia(resultado: ResultadoClusterizacao, destino: Path) -> Path:
+    plt = _pyplot()
+    dbscan = resultado.relatorio["dbscan"]
+    curva = resultado.k_distancias
+    figura, eixo = plt.subplots(figsize=(10, 6))
+    eixo.plot(np.arange(1, len(curva) + 1), curva, color=CORES[0])
+    eixo.axhline(dbscan["eps_joelho"], color=TINTA_SECUNDARIA, linestyle="--", linewidth=1)
+    eixo.text(1, dbscan["eps_joelho"], f" joelho: eps ≈ {dbscan['eps_joelho']:.2f}",
+              va="bottom", color=TINTA)
+    resumo = "\n".join(
+        f"eps {g['eps']:.3f}: {g['n_clusters']} cluster(s), {g['ruido_pct']:.0f}% ruído"
+        for g in dbscan["grade"]
+    )
+    eixo.text(.02, .97, resumo, transform=eixo.transAxes, va="top", fontsize=8.5, color=TINTA_SECUNDARIA,
+              bbox={"facecolor": SUPERFICIE, "edgecolor": GRADE})
+    eixo.set(xlabel="Unidades ordenadas", ylabel=f"Distância ao {dbscan['min_samples']}º vizinho",
+             title="DBSCAN: curva k-distância" + (
+                 " — nenhum eps separou as unidades com ruído aceitável"
+                 if dbscan["selecionado"] is None else f" — eps escolhido = {dbscan['selecionado']['eps']:.2f}"
+             ))
+    eixo.grid(axis="y")
+    return _salvar(figura, destino)
+
+
 def grafico_tsne(resultado: ResultadoClusterizacao, destino: Path) -> Path:
     perfil = resultado.perfil
     nomes = dict(zip(perfil["cluster_kmeans"], perfil["nome_cluster_kmeans"]))
@@ -290,6 +343,8 @@ def gerar_graficos_clusterizacao(resultado: ResultadoClusterizacao, pasta: str |
         "05_kmeans_silhueta_por_k.png": grafico_silhueta_por_k,
         "06_kmeans_diagrama_silhueta.png": grafico_diagrama_silhueta,
         "07_kmeans_clusters_pca.png": grafico_kmeans_pca,
+        "08_hdbscan_clusters_pca.png": grafico_hdbscan_pca,
+        "09_dbscan_k_distancia.png": grafico_k_distancia,
         "10_tsne_clusters.png": grafico_tsne,
         "11_perfil_clusters.png": grafico_perfil,
     }

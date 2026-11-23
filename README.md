@@ -131,9 +131,9 @@ perfil da unidade, e elas são pouco correlacionadas entre si:
 `tempo_encerramento_mediano`, `cv_semanal` e `prop_zika`. Elas medem o processo
 de notificação e registro, e não o perfil da unidade, ou são redundantes
 (`cv_semanal` tem r = −0,55 com o volume). Com as 12 variáveis juntas, a melhor
-silhueta cai de 0,32 para 0,22 e a estabilidade cai de 0,84 para 0,55. A
-comparação entre os dois conjuntos fica registrada em `selecao_variaveis` no
-JSON.
+silhueta cai de 0,32 para 0,22, a estabilidade cai de 0,84 para 0,55 e o
+HDBSCAN marca pelo menos 39% das unidades como ruído. A comparação entre os
+dois conjuntos fica registrada em `selecao_variaveis` no JSON.
 
 **Excluídas:** `caso_grave` (14 casos) e `obito` (7 casos), raros demais para
 diferenciar unidades; `prop_dengue`, que é o complemento de chikungunya + zika.
@@ -152,6 +152,15 @@ partição do K-Means no espaço PCA é praticamente a mesma do espaço completo
 | Algoritmo | Como os parâmetros foram escolhidos | Resultado |
 | --- | --- | --- |
 | **K-Means** | k de 2 a 10. Critério: maior silhueta. Apoio: cotovelo e estabilidade (ARI médio em 30 subamostras de 80%) | **k = 5**, silhueta 0,32, estabilidade 0,84 (a maior entre os k) |
+| **HDBSCAN** | Grade `min_cluster_size` ∈ {3,4,5,6,8} × `min_samples` ∈ {1,2,3,None}. Critério: maior silhueta entre configurações com ≥ 2 clusters e ruído ≤ 25% | `min_cluster_size=5`, `min_samples=1`: **2 clusters + 15 unidades atípicas (24%)**, silhueta 0,38 |
+| **DBSCAN** | `min_samples=4`, eps entre o joelho e percentis da curva k-distância | Nenhum eps separou as unidades com ruído ≤ 25%. Com uma densidade única, as unidades formam um só grupo |
+
+O HDBSCAN funciona melhor que o DBSCAN porque admite clusters de densidades
+diferentes. A concordância entre K-Means e HDBSCAN é baixa (ARI = 0,16): o
+HDBSCAN separa só o núcleo denso (unidades ambulatoriais) e o grupo hospitalar,
+e classifica como atípicas as unidades pediátricas e as que começaram a
+notificar recentemente. O K-Means, por sua vez, força todas as unidades em
+algum grupo.
 
 ### Resultados (K-Means, k = 5)
 
@@ -166,11 +175,23 @@ partição do K-Means no espaço PCA é praticamente a mesma do espaço completo
 O nome de cada cluster é gerado automaticamente a partir da variável ativa com
 maior |z-score| médio (gráfico `11_perfil_clusters`).
 
+### Ressalvas
+
+- A estrutura de grupos é **moderada** (silhueta 0,32): os clusters dividem um
+  contínuo de perfis em segmentos úteis, e não são grupos naturalmente isolados.
+  O HDBSCAN confirma isso ao tratar 24% das unidades como atípicas.
+- Mesmo depois da correção dos códigos CNES, o cluster "Notificação recente"
+  (15 unidades com ~14× mais notificações em 2024–25 do que em 2022–23) indica
+  que **parte do aumento observado a partir de 2024 vem da expansão da rede
+  notificadora** (melhoria na coleta), e não só de mais transmissão.
+- Não há população por bairro nem por área de cobertura, então o volume é
+  absoluto e não é uma taxa de incidência.
+
 ### Arquivos gerados (`resultados_clusterizacao/`)
 
 | Arquivo | Conteúdo |
 | --- | --- |
-| `perfil_unidades.csv` | Variáveis, rótulos do K-Means e coordenadas PCA e t-SNE por unidade |
+| `perfil_unidades.csv` | Variáveis, rótulos K-Means/HDBSCAN, probabilidade HDBSCAN e coordenadas PCA e t-SNE por unidade |
 | `metricas_clusterizacao.json` | Relatório completo: variáveis, pré-processamento, buscas de parâmetros, comparações e perfis dos clusters |
 | `graficos/*.png` | Gráficos numerados na ordem da análise |
 

@@ -12,8 +12,9 @@ Etapas:
 2. imputação pela mediana + padronização z-score (``StandardScaler``);
 3. redução de dimensionalidade com PCA, mantendo o menor número de componentes
    que explica ``PCA_VARIANCIA_MINIMA`` da variância;
-4. K-Means (k escolhido pela silhueta, conferido pela estabilidade);
-5. perfil de cada cluster.
+4. K-Means (k escolhido pela silhueta), HDBSCAN (parâmetros escolhidos pela
+   silhueta com limite de ruído) e DBSCAN (eps pela curva k-distância);
+5. comparação dos algoritmos e perfil de cada cluster.
 """
 
 from __future__ import annotations
@@ -26,16 +27,18 @@ import pandas as pd
 
 if __package__:
     from .config import (
-        CLUSTER_FEATURES, CLUSTER_FEATURES_ILUSTRATIVAS, ESTABILIDADE_FRACAO,
-        ESTABILIDADE_REAMOSTRAGENS, K_RANGE, MIN_NOTIFICACOES_UNIDADE, PCA_VARIANCIA_MINIMA,
-        RANDOM_STATE,
+        CLUSTER_FEATURES, CLUSTER_FEATURES_ILUSTRATIVAS, DBSCAN_MIN_SAMPLES,
+        ESTABILIDADE_FRACAO, ESTABILIDADE_REAMOSTRAGENS, HDBSCAN_MIN_CLUSTER_SIZE,
+        HDBSCAN_MIN_SAMPLES, K_RANGE, MIN_NOTIFICACOES_UNIDADE, PCA_VARIANCIA_MINIMA,
+        RANDOM_STATE, RUIDO_MAXIMO,
     )
     from .data import UNIDADE_NAO_INFORMADA
 else:
     from config import (
-        CLUSTER_FEATURES, CLUSTER_FEATURES_ILUSTRATIVAS, ESTABILIDADE_FRACAO,
-        ESTABILIDADE_REAMOSTRAGENS, K_RANGE, MIN_NOTIFICACOES_UNIDADE, PCA_VARIANCIA_MINIMA,
-        RANDOM_STATE,
+        CLUSTER_FEATURES, CLUSTER_FEATURES_ILUSTRATIVAS, DBSCAN_MIN_SAMPLES,
+        ESTABILIDADE_FRACAO, ESTABILIDADE_REAMOSTRAGENS, HDBSCAN_MIN_CLUSTER_SIZE,
+        HDBSCAN_MIN_SAMPLES, K_RANGE, MIN_NOTIFICACOES_UNIDADE, PCA_VARIANCIA_MINIMA,
+        RANDOM_STATE, RUIDO_MAXIMO,
     )
     from data import UNIDADE_NAO_INFORMADA
 
@@ -70,6 +73,7 @@ ROTULOS_VARIAVEL = {
     ("crescimento_24_25", 1): "Notificação recente (2024–25)",
     ("crescimento_24_25", -1): "Notificação em queda",
 }
+NOME_RUIDO = "Atípicas (ruído)"
 
 BAIRRO_NAO_INFORMADO = "Não informado"
 ROTULO_RUIDO = -1
@@ -292,6 +296,93 @@ def treinar_kmeans(espaco: np.ndarray, k: int) -> tuple[Any, np.ndarray]:
     return modelo, _renumerar_por_tamanho(modelo.labels_)
 
 
+def _selecionar(grade: list[dict[str, Any]], ruido_maximo: float) -> dict[str, Any] | None:
+    elegiveis = [
+        item for item in grade
+        if item["silhueta"] is not None and item["ruido_pct"] <= ruido_maximo * 100
+    ]
+    if not elegiveis:
+        return None
+    return max(elegiveis, key=lambda item: (round(item["silhueta"], 6), -item["ruido_pct"]))
+
+
+def avaliar_hdbscan(
+    espaco: np.ndarray,
+    min_cluster_sizes: Iterable[int] = HDBSCAN_MIN_CLUSTER_SIZE,
+    min_samples_values: Iterable[int | None] = HDBSCAN_MIN_SAMPLES,
+    ruido_maximo: float = RUIDO_MAXIMO,
+) -> dict[str, Any]:
+    """Busca em grade do HDBSCAN; escolhe a maior silhueta com ruído limitado."""
+    from sklearn.cluster import HDBSCAN
+
+    grade = []
+    for min_cluster_size in min_cluster_sizes:
+        for min_samples in min_samples_values:
+            rotulos = HDBSCAN(
+                min_cluster_size=min_cluster_size, min_samples=min_samples, copy=True
+            ).fit_predict(espaco)
+            grade.append({
+                "min_cluster_size": min_cluster_size,
+                "min_samples": min_samples,
+                **metricas_particao(espaco, rotulos),
+            })
+    return {
+        "grade": grade,
+        "selecionado": _selecionar(grade, ruido_maximo),
+        "criterio": f"maior silhueta (sem ruído) entre configurações com ≥2 clusters "
+                    f"e ruído ≤ {ruido_maximo:.0%}",
+    }
+
+
+def treinar_hdbscan(espaco: np.ndarray, min_cluster_size: int, min_samples: int | None):
+    from sklearn.cluster import HDBSCAN
+
+    modelo = HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples, copy=True)
+    rotulos = modelo.fit_predict(espaco)
+    return modelo, _renumerar_por_tamanho(rotulos)
+
+
+def distancias_k_vizinho(espaco: np.ndarray, k: int = DBSCAN_MIN_SAMPLES) -> np.ndarray:
+    """Distância de cada ponto ao seu k-ésimo vizinho, em ordem crescente."""
+    from sklearn.neighbors import NearestNeighbors
+
+    # O próprio ponto é o vizinho 0, por isso k + 1 vizinhos.
+    distancias, _ = NearestNeighbors(n_neighbors=k + 1).fit(espaco).kneighbors(espaco)
+    return np.sort(distancias[:, -1])
+
+
+def _joelho(curva: np.ndarray) -> float:
+    """Ponto da curva mais distante da reta que liga o primeiro ao último ponto."""
+    x = np.linspace(0, 1, len(curva))
+    y = (curva - curva.min()) / max(np.ptp(curva), 1e-12)
+    distancia = np.abs(y - x)
+    return float(curva[int(np.argmax(distancia))])
+
+
+def avaliar_dbscan(
+    espaco: np.ndarray, min_samples: int = DBSCAN_MIN_SAMPLES, ruido_maximo: float = RUIDO_MAXIMO
+) -> dict[str, Any]:
+    """DBSCAN com eps candidatos tirados da curva k-distância."""
+    from sklearn.cluster import DBSCAN
+
+    curva = distancias_k_vizinho(espaco, min_samples)
+    joelho = _joelho(curva)
+    candidatos = sorted({round(float(v), 4) for v in
+                         [joelho, *np.percentile(curva, [50, 60, 70, 80, 90, 95])]})
+    grade = []
+    for eps in candidatos:
+        rotulos = DBSCAN(eps=eps, min_samples=min_samples).fit_predict(espaco)
+        grade.append({"eps": eps, **metricas_particao(espaco, rotulos)})
+    return {
+        "min_samples": min_samples,
+        "eps_joelho": joelho,
+        "grade": grade,
+        "selecionado": _selecionar(grade, ruido_maximo),
+        "criterio": f"eps entre o joelho e percentis da curva k-distância; maior silhueta "
+                    f"com ≥2 clusters e ruído ≤ {ruido_maximo:.0%}",
+    }
+
+
 # ---------------------------------------------------------------------------
 # 5. Interpretação
 # ---------------------------------------------------------------------------
@@ -309,7 +400,7 @@ def perfil_clusters(
 ) -> list[dict[str, Any]]:
     """Médias originais, z-score médio e descrição das variáveis ativas mais marcantes."""
     resultado = []
-    for cluster in sorted(set(rotulos)):
+    for cluster in sorted(set(rotulos), key=lambda c: (c == ROTULO_RUIDO, c)):
         selecao = rotulos == cluster
         z = zscores[selecao].mean()
         destaque = z[list(CLUSTER_FEATURES)].abs().sort_values(ascending=False).head(3).index
@@ -317,7 +408,7 @@ def perfil_clusters(
         rotulo = ROTULOS_VARIAVEL[(principal, 1 if z[principal] > 0 else -1)]
         resultado.append({
             coluna: int(cluster),
-            "nome": f"Cluster {cluster} · {rotulo}",
+            "nome": NOME_RUIDO if cluster == ROTULO_RUIDO else f"Cluster {cluster} · {rotulo}",
             "n_unidades": int(selecao.sum()),
             "n_notificacoes": int(perfil.loc[selecao, "n_notificacoes"].sum()),
             "unidades": list(perfil.index[selecao]),
@@ -348,6 +439,7 @@ class ResultadoClusterizacao:
     padronizado: np.ndarray       # variáveis após imputação + z-score
     componentes: np.ndarray       # espaço PCA retido (onde os algoritmos rodam)
     pca: Any
+    k_distancias: np.ndarray
     silhueta_amostras: np.ndarray
     zscores: pd.DataFrame         # z-score de todas as variáveis (para os perfis)
 
@@ -360,6 +452,8 @@ def comparar_conjuntos_variaveis(perfil: pd.DataFrame) -> dict[str, Any]:
         pca, n_comp, comp = reduzir_dimensionalidade(x)
         kmeans = avaliar_kmeans(comp)
         k = kmeans["k_selecionado"]
+        hdbscan = avaliar_hdbscan(comp, ruido_maximo=1.0)
+        com_clusters = [g for g in hdbscan["grade"] if g["n_clusters"] >= 2]
         resultado[nome] = {
             "n_variaveis": len(colunas),
             "n_componentes_pca": n_comp,
@@ -367,6 +461,7 @@ def comparar_conjuntos_variaveis(perfil: pd.DataFrame) -> dict[str, Any]:
             "k_selecionado": k,
             "silhueta_kmeans": kmeans["por_k"][k]["silhueta"],
             "estabilidade_kmeans": kmeans["por_k"][k]["estabilidade_ari"],
+            "hdbscan_menor_ruido_pct": min((g["ruido_pct"] for g in com_clusters), default=None),
         }
     return resultado
 
@@ -392,7 +487,7 @@ def executar_clusterizacao(
     anos: Iterable[int] | None = None,
 ) -> ResultadoClusterizacao:
     from sklearn.manifold import TSNE
-    from sklearn.metrics import silhouette_samples
+    from sklearn.metrics import adjusted_rand_score, silhouette_samples
 
     registros = preparar_registros(registros_brutos, anos)
     perfil = construir_perfil_unidades(registros, min_notificacoes)
@@ -406,24 +501,58 @@ def executar_clusterizacao(
     k = avaliacao_kmeans["k_selecionado"]
     _, rotulos_kmeans = treinar_kmeans(componentes, k)
 
+    avaliacao_hdbscan = avaliar_hdbscan(componentes)
+    escolha = avaliacao_hdbscan["selecionado"]
+    if escolha is None:
+        raise ValueError("Nenhuma configuração do HDBSCAN atendeu aos critérios")
+    modelo_hdbscan, rotulos_hdbscan = treinar_hdbscan(
+        componentes, escolha["min_cluster_size"], escolha["min_samples"]
+    )
+
+    avaliacao_dbscan = avaliar_dbscan(componentes)
+    k_distancias = distancias_k_vizinho(componentes, avaliacao_dbscan["min_samples"])
+
     perplexidade = float(min(15, (len(perfil) - 1) / 3))
     tsne = TSNE(n_components=2, perplexity=perplexidade, init="pca",
                 random_state=RANDOM_STATE).fit_transform(padronizado)
 
     perfil = perfil.assign(
         cluster_kmeans=rotulos_kmeans,
+        cluster_hdbscan=rotulos_hdbscan,
+        prob_hdbscan=np.round(modelo_hdbscan.probabilities_, 4),
         pc1=componentes[:, 0], pc2=componentes[:, 1],
         tsne_1=tsne[:, 0], tsne_2=tsne[:, 1],
     )
+
+    validos_hdb = rotulos_hdbscan != ROTULO_RUIDO
+    comparacao = [
+        {"algoritmo": "K-Means", "parametros": f"k={k}",
+         **metricas_particao(componentes, rotulos_kmeans)},
+        {"algoritmo": "HDBSCAN",
+         "parametros": f"min_cluster_size={escolha['min_cluster_size']}, "
+                       f"min_samples={escolha['min_samples']}",
+         **metricas_particao(componentes, rotulos_hdbscan)},
+    ]
+    if avaliacao_dbscan["selecionado"]:
+        comparacao.append({"algoritmo": "DBSCAN",
+                           "parametros": f"eps={avaliacao_dbscan['selecionado']['eps']}, "
+                                         f"min_samples={avaliacao_dbscan['min_samples']}",
+                           **{c: v for c, v in avaliacao_dbscan["selecionado"].items() if c != "eps"}})
+    else:
+        comparacao.append({"algoritmo": "DBSCAN", "parametros": "nenhum eps atendeu aos critérios",
+                           "n_clusters": None, "n_ruido": None, "ruido_pct": None, "silhueta": None,
+                           "davies_bouldin": None, "calinski_harabasz": None})
 
     total_notificacoes = len(registros)
     zscores = zscores_unidades(perfil)
     perfis = {
         "kmeans": perfil_clusters(perfil, zscores, rotulos_kmeans, "cluster_kmeans"),
+        "hdbscan": perfil_clusters(perfil, zscores, rotulos_hdbscan, "cluster_hdbscan"),
     }
     nomes = {alg: {c[f"cluster_{alg}"]: c["nome"] for c in perfis[alg]} for alg in perfis}
     perfil = perfil.assign(
         nome_cluster_kmeans=perfil["cluster_kmeans"].map(nomes["kmeans"]),
+        nome_cluster_hdbscan=perfil["cluster_hdbscan"].map(nomes["hdbscan"]),
     )
     relatorio = {
         "unidade_analise": "Unidade de saúde notificadora (código CNES); uma linha por unidade.",
@@ -461,10 +590,16 @@ def executar_clusterizacao(
         },
         "kmeans": {**avaliacao_kmeans,
                    "por_k": {str(c): v for c, v in avaliacao_kmeans["por_k"].items()}},
+        "hdbscan": avaliacao_hdbscan,
+        "dbscan": avaliacao_dbscan,
+        "comparacao": comparacao,
+        "ari_kmeans_hdbscan": float(adjusted_rand_score(
+            rotulos_kmeans[validos_hdb], rotulos_hdbscan[validos_hdb]
+        )) if validos_hdb.sum() > 1 else None,
         "perfis": perfis,
     }
     return ResultadoClusterizacao(
         perfil=perfil, relatorio=relatorio, padronizado=padronizado,
-        componentes=componentes, pca=pca,
+        componentes=componentes, pca=pca, k_distancias=k_distancias,
         silhueta_amostras=silhouette_samples(componentes, rotulos_kmeans), zscores=zscores,
     )
