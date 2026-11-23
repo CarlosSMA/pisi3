@@ -19,9 +19,12 @@ else:
     from clustering import ROTULO_RUIDO, TODAS_FEATURES, ResultadoClusterizacao
     from config import CLUSTER_FEATURES, PCA_VARIANCIA_MINIMA
 
-# Paleta categórica em ordem fixa (nunca reciclada). Em gráficos de dispersão
-# com mais de três grupos usamos pequenos múltiplos (um painel por cluster).
+# Paleta categórica em ordem fixa (nunca reciclada). Acima de três cores num
+# mesmo gráfico de dispersão algumas se confundem (laranja × rosa, e mais ainda
+# para daltônicos); por isso cada cluster também tem um marcador próprio e
+# rótulo direto, e a cor nunca é a única pista.
 CORES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
+MARCADORES = ["o", "s", "^", "D", "P", "v", "X", "*"]
 CINZA = "#bdbcb5"
 SUPERFICIE = "#fcfcfb"
 TINTA = "#0b0b0b"
@@ -240,15 +243,35 @@ def _pequenos_multiplos(x, y, rotulos, nomes, titulo, rotulo_x, rotulo_y, destin
 
 
 def grafico_kmeans_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path:
+    """Todos os clusters do K-Means num único plano PC1 × PC2."""
+    plt = _pyplot()
     perfil = resultado.perfil
     variancia = resultado.relatorio["pca"]["variancia_por_componente"]
-    nomes = dict(zip(perfil["cluster_kmeans"], perfil["nome_cluster_kmeans"]))
     n = resultado.relatorio["pca"]["n_componentes"]
-    return _pequenos_multiplos(
-        perfil["pc1"].to_numpy(), perfil["pc2"].to_numpy(), perfil["cluster_kmeans"].to_numpy(), nomes,
-        f"Clusters do K-Means no plano PC1 × PC2 (X = centróide; o agrupamento usa os {n} componentes retidos)",
-        f"PC1 ({variancia[0]:.0%})", f"PC2 ({variancia[1]:.0%})", destino,
-    )
+    figura, eixo = plt.subplots(figsize=(12, 7.5))
+    for posicao, cluster in enumerate(sorted(perfil["cluster_kmeans"].unique())):
+        dados = perfil[perfil["cluster_kmeans"].eq(cluster)]
+        nome = dados["nome_cluster_kmeans"].iloc[0]
+        cor, marcador = CORES[posicao % len(CORES)], MARCADORES[posicao % len(MARCADORES)]
+        eixo.scatter(dados["pc1"], dados["pc2"], s=70, marker=marcador, color=cor,
+                     edgecolors=SUPERFICIE, linewidths=1.2, zorder=3, label=f"{nome} ({len(dados)} unid.)")
+        centro_x, centro_y = dados["pc1"].mean(), dados["pc2"].mean()
+        eixo.scatter([centro_x], [centro_y], s=320, marker=marcador, color=cor,
+                     edgecolors=TINTA, linewidths=1.8, zorder=4)
+        eixo.annotate(f"Cluster {cluster}", xy=(centro_x, centro_y), xytext=(12, 10),
+                      textcoords="offset points", fontsize=10, fontweight="bold", color=TINTA, zorder=5,
+                      bbox={"boxstyle": "round,pad=0.25", "facecolor": SUPERFICIE, "edgecolor": GRADE,
+                            "alpha": .7})
+    eixo.set(xlabel=f"PC1 ({variancia[0]:.0%} da variância)", ylabel=f"PC2 ({variancia[1]:.0%} da variância)",
+             title="Clusters do K-Means no plano PC1 × PC2")
+    eixo.text(0, 1.01, f"Marcador grande com contorno = centróide do cluster. O agrupamento usa os {n} "
+                       "componentes retidos;\naqui aparecem só os dois primeiros, por isso alguns clusters "
+                       "se sobrepõem.", transform=eixo.transAxes, fontsize=9, color=TINTA_SECUNDARIA,
+              va="bottom")
+    eixo.set_title(eixo.get_title(loc="left"), loc="left", pad=34)
+    eixo.grid(True)
+    eixo.legend(title="Cluster (K-Means)", loc="upper left", bbox_to_anchor=(1.01, 1), borderaxespad=0)
+    return _salvar(figura, destino)
 
 
 def grafico_hdbscan_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path:
