@@ -50,6 +50,10 @@ CLUSTER_FEATURES_ILUSTRATIVAS = {
     "prop_zika": "Proporção das notificações que são de zika (mediana de 1%)",
 }
 
+# Redução de dimensionalidade: menor número de componentes que explica pelo
+# menos esta fração da variância das variáveis padronizadas.
+PCA_VARIANCIA_MINIMA = 0.80
+
 K_RANGE = range(2, 11)
 # Estabilidade do K-Means: reamostragens de 80% das unidades, comparadas à
 # partição completa pelo índice de Rand ajustado (ARI).

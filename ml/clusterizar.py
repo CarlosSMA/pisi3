@@ -50,6 +50,8 @@ def main() -> None:
     resumo = {
         "unidades_agrupadas": relatorio["n_unidades_agrupadas"],
         "unidades_total": relatorio["n_unidades_total"],
+        "pca": f"{relatorio['pca']['n_componentes']} componentes, "
+               f"{relatorio['pca']['variancia_retida']:.1%} da variância",
         "clusters_kmeans": {p["nome"]: p["n_unidades"] for p in relatorio["perfis"]["kmeans"]},
         "graficos": [str(c) for c in caminhos],
     }

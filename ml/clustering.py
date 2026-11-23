@@ -10,8 +10,10 @@ apenas no perfil de cada cluster.
 Etapas:
 1. construção do perfil das unidades (``construir_perfil_unidades``);
 2. imputação pela mediana + padronização z-score (``StandardScaler``);
-3. K-Means (k escolhido pela silhueta, conferido pela estabilidade);
-4. perfil de cada cluster.
+3. redução de dimensionalidade com PCA, mantendo o menor número de componentes
+   que explica ``PCA_VARIANCIA_MINIMA`` da variância;
+4. K-Means (k escolhido pela silhueta, conferido pela estabilidade);
+5. perfil de cada cluster.
 """
 
 from __future__ import annotations
@@ -25,13 +27,15 @@ import pandas as pd
 if __package__:
     from .config import (
         CLUSTER_FEATURES, CLUSTER_FEATURES_ILUSTRATIVAS, ESTABILIDADE_FRACAO,
-        ESTABILIDADE_REAMOSTRAGENS, K_RANGE, MIN_NOTIFICACOES_UNIDADE, RANDOM_STATE,
+        ESTABILIDADE_REAMOSTRAGENS, K_RANGE, MIN_NOTIFICACOES_UNIDADE, PCA_VARIANCIA_MINIMA,
+        RANDOM_STATE,
     )
     from .data import UNIDADE_NAO_INFORMADA
 else:
     from config import (
         CLUSTER_FEATURES, CLUSTER_FEATURES_ILUSTRATIVAS, ESTABILIDADE_FRACAO,
-        ESTABILIDADE_REAMOSTRAGENS, K_RANGE, MIN_NOTIFICACOES_UNIDADE, RANDOM_STATE,
+        ESTABILIDADE_REAMOSTRAGENS, K_RANGE, MIN_NOTIFICACOES_UNIDADE, PCA_VARIANCIA_MINIMA,
+        RANDOM_STATE,
     )
     from data import UNIDADE_NAO_INFORMADA
 
@@ -172,7 +176,7 @@ def construir_perfil_unidades(
 
 
 # ---------------------------------------------------------------------------
-# 2. Pré-processamento
+# 2–3. Pré-processamento e redução de dimensionalidade
 # ---------------------------------------------------------------------------
 
 def criar_preprocessador(escalonador: Any | None = None):
@@ -187,8 +191,21 @@ def criar_preprocessador(escalonador: Any | None = None):
     ])
 
 
+def reduzir_dimensionalidade(
+    padronizado: np.ndarray, variancia_minima: float = PCA_VARIANCIA_MINIMA
+) -> tuple[Any, int, np.ndarray]:
+    """Ajusta PCA completo e retém componentes até ``variancia_minima``."""
+    from sklearn.decomposition import PCA
+
+    pca = PCA(random_state=RANDOM_STATE).fit(padronizado)
+    acumulada = np.cumsum(pca.explained_variance_ratio_)
+    n_componentes = int(np.searchsorted(acumulada, variancia_minima) + 1)
+    n_componentes = max(2, min(n_componentes, len(acumulada)))
+    return pca, n_componentes, pca.transform(padronizado)[:, :n_componentes]
+
+
 # ---------------------------------------------------------------------------
-# 3. Algoritmos
+# 4. Algoritmos
 # ---------------------------------------------------------------------------
 
 def metricas_particao(espaco: np.ndarray, rotulos: np.ndarray) -> dict[str, Any]:
@@ -276,7 +293,7 @@ def treinar_kmeans(espaco: np.ndarray, k: int) -> tuple[Any, np.ndarray]:
 
 
 # ---------------------------------------------------------------------------
-# 4. Interpretação
+# 5. Interpretação
 # ---------------------------------------------------------------------------
 
 def zscores_unidades(perfil: pd.DataFrame) -> pd.DataFrame:
@@ -328,7 +345,9 @@ def _json(valor: Any) -> Any:
 class ResultadoClusterizacao:
     perfil: pd.DataFrame          # variáveis, rótulos e coordenadas por unidade
     relatorio: dict[str, Any]     # tudo o que vai para o JSON
-    padronizado: np.ndarray       # variáveis após imputação + z-score (onde o K-Means roda)
+    padronizado: np.ndarray       # variáveis após imputação + z-score
+    componentes: np.ndarray       # espaço PCA retido (onde os algoritmos rodam)
+    pca: Any
     silhueta_amostras: np.ndarray
     zscores: pd.DataFrame         # z-score de todas as variáveis (para os perfis)
 
@@ -338,10 +357,13 @@ def comparar_conjuntos_variaveis(perfil: pd.DataFrame) -> dict[str, Any]:
     resultado = {}
     for nome, colunas in [("ativas (adotado)", list(CLUSTER_FEATURES)), ("todas", TODAS_FEATURES)]:
         x = criar_preprocessador().fit_transform(perfil[colunas])
-        kmeans = avaliar_kmeans(x)
+        pca, n_comp, comp = reduzir_dimensionalidade(x)
+        kmeans = avaliar_kmeans(comp)
         k = kmeans["k_selecionado"]
         resultado[nome] = {
             "n_variaveis": len(colunas),
+            "n_componentes_pca": n_comp,
+            "variancia_retida": float(np.sum(pca.explained_variance_ratio_[:n_comp])),
             "k_selecionado": k,
             "silhueta_kmeans": kmeans["por_k"][k]["silhueta"],
             "estabilidade_kmeans": kmeans["por_k"][k]["estabilidade_ari"],
@@ -349,11 +371,27 @@ def comparar_conjuntos_variaveis(perfil: pd.DataFrame) -> dict[str, Any]:
     return resultado
 
 
+def comparar_espacos(padronizado: np.ndarray, componentes: np.ndarray, k: int) -> dict[str, Any]:
+    """K-Means no espaço padronizado completo × no espaço PCA retido."""
+    from sklearn.metrics import adjusted_rand_score, silhouette_score
+
+    _, rotulos_completo = treinar_kmeans(padronizado, k)
+    _, rotulos_pca = treinar_kmeans(componentes, k)
+    return {
+        "silhueta_espaco_completo": float(silhouette_score(padronizado, rotulos_completo)),
+        "silhueta_espaco_pca": float(silhouette_score(componentes, rotulos_pca)),
+        "ari_entre_particoes": float(adjusted_rand_score(rotulos_completo, rotulos_pca)),
+        "nota": "A silhueta tende a ser maior em menos dimensões; o ARI mostra se a "
+                "partição encontrada no espaço PCA é a mesma do espaço completo.",
+    }
+
+
 def executar_clusterizacao(
     registros_brutos: pd.DataFrame,
     min_notificacoes: int = MIN_NOTIFICACOES_UNIDADE,
     anos: Iterable[int] | None = None,
 ) -> ResultadoClusterizacao:
+    from sklearn.manifold import TSNE
     from sklearn.metrics import silhouette_samples
 
     registros = preparar_registros(registros_brutos, anos)
@@ -362,12 +400,21 @@ def executar_clusterizacao(
 
     preprocessador = criar_preprocessador()
     padronizado = preprocessador.fit_transform(perfil[features])
+    pca, n_componentes, componentes = reduzir_dimensionalidade(padronizado)
 
-    avaliacao_kmeans = avaliar_kmeans(padronizado)
+    avaliacao_kmeans = avaliar_kmeans(componentes)
     k = avaliacao_kmeans["k_selecionado"]
-    _, rotulos_kmeans = treinar_kmeans(padronizado, k)
+    _, rotulos_kmeans = treinar_kmeans(componentes, k)
 
-    perfil = perfil.assign(cluster_kmeans=rotulos_kmeans)
+    perplexidade = float(min(15, (len(perfil) - 1) / 3))
+    tsne = TSNE(n_components=2, perplexity=perplexidade, init="pca",
+                random_state=RANDOM_STATE).fit_transform(padronizado)
+
+    perfil = perfil.assign(
+        cluster_kmeans=rotulos_kmeans,
+        pc1=componentes[:, 0], pc2=componentes[:, 1],
+        tsne_1=tsne[:, 0], tsne_2=tsne[:, 1],
+    )
 
     total_notificacoes = len(registros)
     zscores = zscores_unidades(perfil)
@@ -398,11 +445,26 @@ def executar_clusterizacao(
             "imputacao": "mediana (SimpleImputer)",
             "escalonamento": "StandardScaler (z-score)",
         },
+        "pca": {
+            "criterio": f"menor número de componentes com variância acumulada ≥ {PCA_VARIANCIA_MINIMA:.0%}",
+            "n_componentes": n_componentes,
+            "n_variaveis_originais": len(features),
+            "variancia_retida": float(np.sum(pca.explained_variance_ratio_[:n_componentes])),
+            "variancia_por_componente": [float(v) for v in pca.explained_variance_ratio_],
+            "variancia_acumulada": [float(v) for v in np.cumsum(pca.explained_variance_ratio_)],
+            "cargas": {
+                f"PC{i + 1}": {f: float(v) for f, v in zip(features, pca.components_[i])}
+                for i in range(n_componentes)
+            },
+            "comparacao_espacos": comparar_espacos(padronizado, componentes, k),
+            "visualizacao": f"t-SNE 2D (perplexidade {perplexidade:.1f}) apenas para visualização.",
+        },
         "kmeans": {**avaliacao_kmeans,
                    "por_k": {str(c): v for c, v in avaliacao_kmeans["por_k"].items()}},
         "perfis": perfis,
     }
     return ResultadoClusterizacao(
         perfil=perfil, relatorio=relatorio, padronizado=padronizado,
-        silhueta_amostras=silhouette_samples(padronizado, rotulos_kmeans), zscores=zscores,
+        componentes=componentes, pca=pca,
+        silhueta_amostras=silhouette_samples(componentes, rotulos_kmeans), zscores=zscores,
     )

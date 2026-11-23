@@ -130,24 +130,47 @@ perfil da unidade, e elas são pouco correlacionadas entre si:
 `completude_registro`, `atraso_notificacao_mediano`,
 `tempo_encerramento_mediano`, `cv_semanal` e `prop_zika`. Elas medem o processo
 de notificação e registro, e não o perfil da unidade, ou são redundantes
-(`cv_semanal` tem r = −0,55 com o volume). A comparação entre usar só as
-ativas e usar as 12 variáveis fica registrada em `selecao_variaveis` no JSON.
+(`cv_semanal` tem r = −0,55 com o volume). Com as 12 variáveis juntas, a melhor
+silhueta cai de 0,32 para 0,22 e a estabilidade cai de 0,84 para 0,55. A
+comparação entre os dois conjuntos fica registrada em `selecao_variaveis` no
+JSON.
 
 **Excluídas:** `caso_grave` (14 casos) e `obito` (7 casos), raros demais para
 diferenciar unidades; `prop_dengue`, que é o complemento de chikungunya + zika.
 Não há variáveis categóricas, então a distância euclidiana é adequada.
 
+### Redução de dimensionalidade
+
+PCA sobre as variáveis padronizadas, mantendo o **menor número de componentes
+com ≥ 80% da variância acumulada**: **4 componentes, 82,9%** (gráficos
+`02_pca_variancia` e `03_pca_cargas`). Os algoritmos rodam nesse espaço. A
+partição do K-Means no espaço PCA é praticamente a mesma do espaço completo
+(ARI = 0,79). O t-SNE é usado **apenas para visualização**.
+
 ### Algoritmos e escolha de parâmetros
 
 | Algoritmo | Como os parâmetros foram escolhidos | Resultado |
 | --- | --- | --- |
-| **K-Means** | k de 2 a 10. Critério: maior silhueta. Apoio: cotovelo e estabilidade (ARI médio em 30 subamostras de 80%) | **k = 8**, silhueta 0,28, estabilidade 0,62 |
+| **K-Means** | k de 2 a 10. Critério: maior silhueta. Apoio: cotovelo e estabilidade (ARI médio em 30 subamostras de 80%) | **k = 5**, silhueta 0,32, estabilidade 0,84 (a maior entre os k) |
+
+### Resultados (K-Means, k = 5)
+
+| Cluster | Unidades | Notificações | % hospitalização | Idade média | Dispersão territorial | Crescimento 24–25 (×) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 · Abrangência local | 16 | 4.761 | 4,6 | 33,2 | 0,39 | 2,1 |
+| 2 · Notificação recente (2024–25) | 15 | 3.162 | 13,3 | 32,0 | 0,71 | 13,8 |
+| 3 · Alto volume | 15 | 20.452 (60%) | 3,5 | 32,9 | 0,68 | 2,1 |
+| 4 · Perfil hospitalar | 10 | 1.752 | 64,6 | 33,4 | 0,78 | 1,8 |
+| 5 · Perfil pediátrico | 6 | 4.204 | 23,4 | 9,9 | 0,77 | 2,4 |
+
+O nome de cada cluster é gerado automaticamente a partir da variável ativa com
+maior |z-score| médio (gráfico `11_perfil_clusters`).
 
 ### Arquivos gerados (`resultados_clusterizacao/`)
 
 | Arquivo | Conteúdo |
 | --- | --- |
-| `perfil_unidades.csv` | Variáveis e rótulos do K-Means por unidade |
+| `perfil_unidades.csv` | Variáveis, rótulos do K-Means e coordenadas PCA e t-SNE por unidade |
 | `metricas_clusterizacao.json` | Relatório completo: variáveis, pré-processamento, buscas de parâmetros, comparações e perfis dos clusters |
 | `graficos/*.png` | Gráficos numerados na ordem da análise |
 
