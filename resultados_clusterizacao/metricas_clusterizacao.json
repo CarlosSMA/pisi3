@@ -59,7 +59,54 @@
   },
   "preprocessamento": {
     "imputacao": "mediana (SimpleImputer)",
-    "escalonamento": "StandardScaler (z-score)"
+    "valores_imputados": {
+      "log_notificacoes_semana": 0,
+      "prop_chikungunya": 0,
+      "taxa_hospitalizacao": 0,
+      "idade_media": 0,
+      "dispersao_territorial": 0,
+      "crescimento_24_25": 0
+    },
+    "escalonamento": "StandardScaler (z-score): (x - média) / desvio-padrão",
+    "justificativa": "K-Means, HDBSCAN e DBSCAN usam distância euclidiana; sem padronizar, variáveis de escala maior (idade em anos, log do volume) dominariam as proporções (0–1).",
+    "media": {
+      "log_notificacoes_semana": 1.008112542122116,
+      "prop_chikungunya": 0.2416683224562172,
+      "taxa_hospitalizacao": 0.17953919207054916,
+      "idade_media": 30.60781454447002,
+      "dispersao_territorial": 0.6357929510802812,
+      "crescimento_24_25": 1.1867507903696564
+    },
+    "desvio_padrao": {
+      "log_notificacoes_semana": 0.7154167190510672,
+      "prop_chikungunya": 0.14975663085042643,
+      "taxa_hospitalizacao": 0.2603646434695145,
+      "idade_media": 8.222389676359777,
+      "dispersao_territorial": 0.19421486328231546,
+      "crescimento_24_25": 1.1922155561279633
+    },
+    "mediana_imputacao": {
+      "log_notificacoes_semana": 0.9735842428502632,
+      "prop_chikungunya": 0.23482547728010555,
+      "taxa_hospitalizacao": 0.04376556215284429,
+      "idade_media": 31.8514240258839,
+      "dispersao_territorial": 0.6870778580646484,
+      "crescimento_24_25": 0.9338126100013843
+    },
+    "sensibilidade_escalonamento": {
+      "StandardScaler (adotado)": {
+        "n_componentes_pca": 4,
+        "silhueta": 0.3240735893534152
+      },
+      "RobustScaler": {
+        "n_componentes_pca": 4,
+        "silhueta": 0.3419501019430798
+      },
+      "MinMaxScaler": {
+        "n_componentes_pca": 4,
+        "silhueta": 0.32220516375876873
+      }
+    }
   },
   "pca": {
     "criterio": "menor número de componentes com variância acumulada ≥ 80%",
@@ -127,7 +174,7 @@
   "kmeans": {
     "por_k": {
       "2": {
-        "inercia": 241.97791422686345,
+        "inercia": 241.9779142268635,
         "n_clusters": 2,
         "n_ruido": 0,
         "ruido_pct": 0.0,
@@ -141,7 +188,7 @@
         ]
       },
       "3": {
-        "inercia": 188.71880960784995,
+        "inercia": 188.71880960784998,
         "n_clusters": 3,
         "n_ruido": 0,
         "ruido_pct": 0.0,
@@ -172,7 +219,7 @@
         ]
       },
       "5": {
-        "inercia": 109.15634868940492,
+        "inercia": 109.15634868940491,
         "n_clusters": 5,
         "n_ruido": 0,
         "ruido_pct": 0.0,
@@ -189,7 +236,7 @@
         ]
       },
       "6": {
-        "inercia": 95.1089166960395,
+        "inercia": 95.10891669603946,
         "n_clusters": 6,
         "n_ruido": 0,
         "ruido_pct": 0.0,
@@ -267,7 +314,7 @@
         ]
       },
       "10": {
-        "inercia": 63.02465067709109,
+        "inercia": 63.0246506770911,
         "n_clusters": 10,
         "n_ruido": 0,
         "ruido_pct": 0.0,

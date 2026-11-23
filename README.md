@@ -139,6 +139,16 @@ dois conjuntos fica registrada em `selecao_variaveis` no JSON.
 diferenciar unidades; `prop_dengue`, que é o complemento de chikungunya + zika.
 Não há variáveis categóricas, então a distância euclidiana é adequada.
 
+### Pré-processamento e padronização
+
+1. Imputação de ausentes pela mediana (`SimpleImputer`).
+2. **Padronização z-score** (`StandardScaler`): (x − média) / desvio-padrão.
+   K-Means, HDBSCAN e DBSCAN usam distância euclidiana. Sem padronizar,
+   variáveis com escalas maiores (idade em anos, log do volume) dominariam as
+   proporções (0–1).
+3. Sensibilidade: com `RobustScaler` a silhueta é 0,34, e com `MinMaxScaler` é
+   0,32. O resultado não depende da escolha do escalonador.
+
 ### Redução de dimensionalidade
 
 PCA sobre as variáveis padronizadas, mantendo o **menor número de componentes

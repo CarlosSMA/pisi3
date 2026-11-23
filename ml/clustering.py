@@ -444,6 +444,23 @@ class ResultadoClusterizacao:
     zscores: pd.DataFrame         # z-score de todas as variáveis (para os perfis)
 
 
+def sensibilidade_escalonamento(perfil: pd.DataFrame, k: int) -> dict[str, Any]:
+    """Compara a silhueta do K-Means com diferentes escalonadores."""
+    from sklearn.metrics import silhouette_score
+    from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+
+    resultado = {}
+    for nome, escalonador in [("StandardScaler (adotado)", StandardScaler()),
+                              ("RobustScaler", RobustScaler()),
+                              ("MinMaxScaler", MinMaxScaler())]:
+        x = criar_preprocessador(escalonador).fit_transform(perfil[list(CLUSTER_FEATURES)])
+        _, n_comp, comp = reduzir_dimensionalidade(x)
+        _, rotulos = treinar_kmeans(comp, k)
+        resultado[nome] = {"n_componentes_pca": n_comp,
+                           "silhueta": float(silhouette_score(comp, rotulos))}
+    return resultado
+
+
 def comparar_conjuntos_variaveis(perfil: pd.DataFrame) -> dict[str, Any]:
     """Mesmo pipeline com as variáveis ativas × com todas as 12 variáveis."""
     resultado = {}
@@ -524,6 +541,8 @@ def executar_clusterizacao(
         tsne_1=tsne[:, 0], tsne_2=tsne[:, 1],
     )
 
+    escalonador = preprocessador.named_steps["escalonamento"]
+    imputador = preprocessador.named_steps["imputacao"]
     validos_hdb = rotulos_hdbscan != ROTULO_RUIDO
     comparacao = [
         {"algoritmo": "K-Means", "parametros": f"k={k}",
@@ -572,7 +591,15 @@ def executar_clusterizacao(
         "selecao_variaveis": comparar_conjuntos_variaveis(perfil),
         "preprocessamento": {
             "imputacao": "mediana (SimpleImputer)",
-            "escalonamento": "StandardScaler (z-score)",
+            "valores_imputados": {f: int(perfil[f].isna().sum()) for f in features},
+            "escalonamento": "StandardScaler (z-score): (x - média) / desvio-padrão",
+            "justificativa": "K-Means, HDBSCAN e DBSCAN usam distância euclidiana; sem padronizar, "
+                             "variáveis de escala maior (idade em anos, log do volume) dominariam "
+                             "as proporções (0–1).",
+            "media": {f: _json(v) for f, v in zip(features, escalonador.mean_)},
+            "desvio_padrao": {f: _json(v) for f, v in zip(features, escalonador.scale_)},
+            "mediana_imputacao": {f: _json(v) for f, v in zip(features, imputador.statistics_)},
+            "sensibilidade_escalonamento": sensibilidade_escalonamento(perfil, k),
         },
         "pca": {
             "criterio": f"menor número de componentes com variância acumulada ≥ {PCA_VARIANCIA_MINIMA:.0%}",
