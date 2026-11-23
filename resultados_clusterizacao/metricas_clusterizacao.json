@@ -1,0 +1,588 @@
+{
+  "unidade_analise": "Unidade de saúde notificadora (código CNES); uma linha por unidade.",
+  "o_que_nao_e_agrupado": "Pacientes e casos individuais não são agrupados nem classificados.",
+  "periodo": {
+    "anos": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "inicio": "2022-01-02",
+    "fim": "2025-12-28"
+  },
+  "min_notificacoes": 30,
+  "n_unidades_total": 453,
+  "n_unidades_agrupadas": 62,
+  "notificacoes_cobertas_pct": 95.4726215968186,
+  "variaveis": {
+    "log_notificacoes_semana": "Volume: log(1 + notificações por semana do período)",
+    "prop_chikungunya": "Proporção das notificações que são de chikungunya",
+    "taxa_hospitalizacao": "Proporção de hospitalizados (entre registros com o campo informado)",
+    "idade_media": "Idade média dos pacientes notificados (anos)",
+    "dispersao_territorial": "Entropia normalizada dos bairros de residência (0 = um bairro, 1 = uniforme)",
+    "crescimento_24_25": "log((notificações 2024–25 + 1) / (notificações 2022–23 + 1))"
+  },
+  "variaveis_ilustrativas": {
+    "taxa_confirmacao": "Proporção de casos confirmados (depende do acesso a exames)",
+    "completude_registro": "Proporção de registros com hospitalização informada (qualidade da coleta)",
+    "atraso_notificacao_mediano": "Mediana de dias entre início dos sintomas e notificação",
+    "tempo_encerramento_mediano": "Mediana de dias entre notificação e encerramento",
+    "cv_semanal": "Coeficiente de variação das notificações semanais (r = -0,55 com o volume)",
+    "prop_zika": "Proporção das notificações que são de zika (mediana de 1%)"
+  },
+  "variaveis_excluidas": {
+    "caso_grave": "Apenas 14 casos graves em ~36 mil notificações: raro demais para diferenciar unidades.",
+    "obito": "Apenas 7 óbitos: raro demais para diferenciar unidades.",
+    "prop_dengue": "Complemento de chikungunya + zika (correlação de -0,94 com chikungunya).",
+    "sinais_alarme": "Informado em menos de 1/3 dos registros e concentrado em poucas unidades."
+  },
+  "selecao_variaveis": {
+    "ativas (adotado)": {
+      "n_variaveis": 6,
+      "k_selecionado": 8,
+      "silhueta_kmeans": 0.2789936720570571,
+      "estabilidade_kmeans": 0.6152136646895003
+    },
+    "todas": {
+      "n_variaveis": 12,
+      "k_selecionado": 10,
+      "silhueta_kmeans": 0.18416754303082006,
+      "estabilidade_kmeans": 0.5232298883530399
+    }
+  },
+  "preprocessamento": {
+    "imputacao": "mediana (SimpleImputer)",
+    "escalonamento": "StandardScaler (z-score)"
+  },
+  "kmeans": {
+    "por_k": {
+      "2": {
+        "inercia": 303.24434828344556,
+        "n_clusters": 2,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.2054074497639253,
+        "davies_bouldin": 1.7176214356030775,
+        "calinski_harabasz": 13.604009856557234,
+        "estabilidade_ari": 0.5053770406820086,
+        "tamanhos": [
+          46,
+          16
+        ]
+      },
+      "3": {
+        "inercia": 250.34732947629539,
+        "n_clusters": 3,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.18541672127299982,
+        "davies_bouldin": 1.6463907762845273,
+        "calinski_harabasz": 14.335099111928391,
+        "estabilidade_ari": 0.4002999793112998,
+        "tamanhos": [
+          29,
+          21,
+          12
+        ]
+      },
+      "4": {
+        "inercia": 203.5620460834379,
+        "n_clusters": 4,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.22560850956683792,
+        "davies_bouldin": 1.4150769946280328,
+        "calinski_harabasz": 15.997417847326723,
+        "estabilidade_ari": 0.5123671902491506,
+        "tamanhos": [
+          19,
+          17,
+          16,
+          10
+        ]
+      },
+      "5": {
+        "inercia": 163.82338916900244,
+        "n_clusters": 5,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.268798255643141,
+        "davies_bouldin": 1.2002379265580316,
+        "calinski_harabasz": 18.10801692840951,
+        "estabilidade_ari": 0.7205261980648139,
+        "tamanhos": [
+          18,
+          16,
+          14,
+          8,
+          6
+        ]
+      },
+      "6": {
+        "inercia": 139.893484566058,
+        "n_clusters": 6,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.2609786155281547,
+        "davies_bouldin": 1.1310505143308318,
+        "calinski_harabasz": 18.582659377768366,
+        "estabilidade_ari": 0.7153734806491089,
+        "tamanhos": [
+          14,
+          14,
+          13,
+          8,
+          7,
+          6
+        ]
+      },
+      "7": {
+        "inercia": 125.86909348517874,
+        "n_clusters": 7,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.2453934257850013,
+        "davies_bouldin": 1.1470689922959625,
+        "calinski_harabasz": 17.92497199998928,
+        "estabilidade_ari": 0.5783920369048247,
+        "tamanhos": [
+          14,
+          11,
+          9,
+          8,
+          8,
+          6,
+          6
+        ]
+      },
+      "8": {
+        "inercia": 112.01313100014417,
+        "n_clusters": 8,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.2789936720570571,
+        "davies_bouldin": 1.0785108441727886,
+        "calinski_harabasz": 17.905159614053446,
+        "estabilidade_ari": 0.6152136646895003,
+        "tamanhos": [
+          14,
+          13,
+          10,
+          8,
+          6,
+          5,
+          4,
+          2
+        ]
+      },
+      "9": {
+        "inercia": 100.85719535927915,
+        "n_clusters": 9,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.26647271432935854,
+        "davies_bouldin": 1.0357732705816025,
+        "calinski_harabasz": 17.810539687781528,
+        "estabilidade_ari": 0.653455311215284,
+        "tamanhos": [
+          11,
+          10,
+          9,
+          8,
+          8,
+          6,
+          4,
+          4,
+          2
+        ]
+      },
+      "10": {
+        "inercia": 91.34161380590581,
+        "n_clusters": 10,
+        "n_ruido": 0,
+        "ruido_pct": 0.0,
+        "silhueta": 0.270534691172351,
+        "davies_bouldin": 1.0418233016774892,
+        "calinski_harabasz": 17.75293559346294,
+        "estabilidade_ari": 0.7178584921580867,
+        "tamanhos": [
+          10,
+          10,
+          9,
+          7,
+          6,
+          5,
+          5,
+          4,
+          4,
+          2
+        ]
+      }
+    },
+    "k_selecionado": 8,
+    "criterio": "maior coeficiente de silhueta; cotovelo e estabilidade (ARI médio em 30 subamostras de 80%) exibidos como apoio"
+  },
+  "perfis": {
+    "kmeans": [
+      {
+        "cluster_kmeans": 1,
+        "nome": "Cluster 1 · Alto volume",
+        "n_unidades": 14,
+        "n_notificacoes": 18506,
+        "unidades": [
+          "0000418",
+          "0000531",
+          "0000604",
+          "0001120",
+          "0020516",
+          "2352516",
+          "2711923",
+          "6481876",
+          "6530389",
+          "6703437",
+          "6962831",
+          "9115277",
+          "9145133",
+          "9643486"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 1.814177242211875,
+          "prop_chikungunya": 0.1976376527156658,
+          "taxa_hospitalizacao": 0.0641104517299791,
+          "idade_media": 34.21194189730334,
+          "dispersao_territorial": 0.7363505162221115,
+          "crescimento_24_25": 0.7024662120903565,
+          "taxa_confirmacao": 0.4011919598799163,
+          "completude_registro": 0.5790901293743574,
+          "atraso_notificacao_mediano": 4.892857142857143,
+          "tempo_encerramento_mediano": 50.464285714285715,
+          "cv_semanal": 1.3887049949813954,
+          "prop_zika": 0.0231249740869992
+        },
+        "zscores": {
+          "log_notificacoes_semana": 1.1267065454647578,
+          "prop_chikungunya": -0.29401482585788324,
+          "taxa_hospitalizacao": -0.4433349275170896,
+          "idade_media": 0.4383308861164254,
+          "dispersao_territorial": 0.5177645183399661,
+          "crescimento_24_25": -0.4062055521672127,
+          "taxa_confirmacao": 0.21612240454797135,
+          "completude_registro": 0.10482276168779636,
+          "atraso_notificacao_mediano": -0.2688353477705127,
+          "tempo_encerramento_mediano": 0.31597705841011553,
+          "cv_semanal": -0.6407613737201958,
+          "prop_zika": -0.3333504403601057
+        },
+        "descricao": "↑ log_notificacoes_semana, ↑ dispersao_territorial, ↓ taxa_hospitalizacao"
+      },
+      {
+        "cluster_kmeans": 2,
+        "nome": "Cluster 2 · Abrangência local",
+        "n_unidades": 13,
+        "n_notificacoes": 6403,
+        "unidades": [
+          "0000671",
+          "0000981",
+          "2319454",
+          "2711613",
+          "2711974",
+          "6472982",
+          "6475345",
+          "6503640",
+          "6508510",
+          "6508561",
+          "6508960",
+          "6726852",
+          "7775504"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 1.0652032715200594,
+          "prop_chikungunya": 0.30696448086271066,
+          "taxa_hospitalizacao": 0.06474993661590533,
+          "idade_media": 32.9200776612755,
+          "dispersao_territorial": 0.48431049331326115,
+          "crescimento_24_25": 0.5188920482726795,
+          "taxa_confirmacao": 0.40470734011933235,
+          "completude_registro": 0.5059670212090708,
+          "atraso_notificacao_mediano": 6.461538461538462,
+          "tempo_encerramento_mediano": 41.61538461538461,
+          "cv_semanal": 2.012470150967313,
+          "prop_zika": 0.07701428872019041
+        },
+        "zscores": {
+          "log_notificacoes_semana": 0.07980066425295286,
+          "prop_chikungunya": 0.43601514026921273,
+          "taxa_hospitalizacao": -0.44087881489978203,
+          "idade_media": 0.28121546263533037,
+          "dispersao_territorial": -0.7799735571567529,
+          "crescimento_24_25": -0.5601828785610092,
+          "taxa_confirmacao": 0.23869393415612825,
+          "completude_registro": -0.1837785156995947,
+          "atraso_notificacao_mediano": 0.2686835148620237,
+          "tempo_encerramento_mediano": -0.40397879261123004,
+          "cv_semanal": 0.20406474970834143,
+          "prop_zika": 0.3316422712421494
+        },
+        "descricao": "↓ dispersao_territorial, ↓ crescimento_24_25, ↓ taxa_hospitalizacao"
+      },
+      {
+        "cluster_kmeans": 3,
+        "nome": "Cluster 3 · Baixo volume",
+        "n_unidades": 10,
+        "n_notificacoes": 901,
+        "unidades": [
+          "2344807",
+          "2345021",
+          "2711990",
+          "5437571",
+          "5540739",
+          "6443419",
+          "6562205",
+          "6618464",
+          "7958838",
+          "9069747"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 0.3365878763535029,
+          "prop_chikungunya": 0.11383479586124338,
+          "taxa_hospitalizacao": 0.11568466138381392,
+          "idade_media": 29.623331708926607,
+          "dispersao_territorial": 0.6660275275621278,
+          "crescimento_24_25": 1.3122775135391858,
+          "taxa_confirmacao": 0.2970413187405299,
+          "completude_registro": 0.49128883088508796,
+          "atraso_notificacao_mediano": 4.75,
+          "tempo_encerramento_mediano": 52.9,
+          "cv_semanal": 2.1377943657536127,
+          "prop_zika": 0.04332111863733794
+        },
+        "zscores": {
+          "log_notificacoes_semana": -0.9386482701429276,
+          "prop_chikungunya": -0.8536084570615845,
+          "taxa_hospitalizacao": -0.24525039128137927,
+          "idade_media": -0.11973196045109676,
+          "dispersao_territorial": 0.15567591465899802,
+          "crescimento_24_25": 0.10528861372788223,
+          "taxa_confirmacao": -0.4526073259737754,
+          "completude_registro": -0.24171019534949853,
+          "atraso_notificacao_mediano": -0.3177862774673461,
+          "tempo_encerramento_mediano": 0.5141493209110546,
+          "cv_semanal": 0.3738035841616496,
+          "prop_zika": -0.08413055289527334
+        },
+        "descricao": "↓ log_notificacoes_semana, ↓ prop_chikungunya, ↓ taxa_hospitalizacao"
+      },
+      {
+        "cluster_kmeans": 4,
+        "nome": "Cluster 4 · Perfil hospitalar",
+        "n_unidades": 8,
+        "n_notificacoes": 1013,
+        "unidades": [
+          "0000396",
+          "0000426",
+          "0000477",
+          "0000655",
+          "2517132",
+          "2802783",
+          "6471188",
+          "9109897"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 0.43926672060499905,
+          "prop_chikungunya": 0.3806012128226318,
+          "taxa_hospitalizacao": 0.7490748617566083,
+          "idade_media": 32.63505986156953,
+          "dispersao_territorial": 0.763809658983414,
+          "crescimento_24_25": 0.6093697155060402,
+          "taxa_confirmacao": 0.3458629361621363,
+          "completude_registro": 0.6802355321694438,
+          "atraso_notificacao_mediano": 6.3125,
+          "tempo_encerramento_mediano": 42.5625,
+          "cv_semanal": 2.059811948250605,
+          "prop_zika": 0.08322335018473616
+        },
+        "zscores": {
+          "log_notificacoes_semana": -0.795125143666809,
+          "prop_chikungunya": 0.9277244658714157,
+          "taxa_hospitalizacao": 2.187453957252628,
+          "idade_media": 0.2465518416048867,
+          "dispersao_territorial": 0.6591499009890125,
+          "crescimento_24_25": -0.48429251899615755,
+          "taxa_confirmacao": -0.1391338158271336,
+          "completude_registro": 0.5040220460308764,
+          "atraso_notificacao_mediano": 0.21761451609176952,
+          "tempo_encerramento_mediano": -0.32692049405810714,
+          "cv_semanal": 0.2681843734019199,
+          "prop_zika": 0.4082619248398637
+        },
+        "descricao": "↑ taxa_hospitalizacao, ↑ prop_chikungunya, ↓ log_notificacoes_semana"
+      },
+      {
+        "cluster_kmeans": 5,
+        "nome": "Cluster 5 · Perfil pediátrico",
+        "n_unidades": 6,
+        "n_notificacoes": 4204,
+        "unidades": [
+          "0000434",
+          "0000566",
+          "0000930",
+          "0001015",
+          "0889490",
+          "2427427"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 1.4007448659509594,
+          "prop_chikungunya": 0.16451610402843644,
+          "taxa_hospitalizacao": 0.23417509252736546,
+          "idade_media": 9.912745745547035,
+          "dispersao_territorial": 0.7694564417932943,
+          "crescimento_24_25": 0.8795175923940124,
+          "taxa_confirmacao": 0.3724614026705119,
+          "completude_registro": 0.673591072582636,
+          "atraso_notificacao_mediano": 5.666666666666667,
+          "tempo_encerramento_mediano": 47.083333333333336,
+          "cv_semanal": 1.2831782299841341,
+          "prop_zika": 0.04251418165314108
+        },
+        "zscores": {
+          "log_notificacoes_semana": 0.5488162540423057,
+          "prop_chikungunya": -0.5151839887800271,
+          "taxa_hospitalizacao": 0.2098437780520437,
+          "idade_media": -2.5169165672630984,
+          "dispersao_territorial": 0.688224827152989,
+          "crescimento_24_25": -0.25769937021579,
+          "taxa_confirmacao": 0.03164943760126221,
+          "completude_registro": 0.4777977843382921,
+          "atraso_notificacao_mediano": -0.003684478579331643,
+          "tempo_encerramento_mediano": 0.0408992355837875,
+          "cv_semanal": -0.7836865867351449,
+          "prop_zika": -0.09408813385294056
+        },
+        "descricao": "↓ idade_media, ↑ dispersao_territorial, ↑ log_notificacoes_semana"
+      },
+      {
+        "cluster_kmeans": 6,
+        "nome": "Cluster 6 · Notificação recente (2024–25)",
+        "n_unidades": 5,
+        "n_notificacoes": 2005,
+        "unidades": [
+          "2517140",
+          "3374599",
+          "6443397",
+          "6488315",
+          "6558992"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 0.9077284397131518,
+          "prop_chikungunya": 0.05712478650430799,
+          "taxa_hospitalizacao": 0.13283731419202163,
+          "idade_media": 34.553625096073596,
+          "dispersao_territorial": 0.6620489564611498,
+          "crescimento_24_25": 3.966899908872454,
+          "taxa_confirmacao": 0.3608938423523268,
+          "completude_registro": 0.5812790635304363,
+          "atraso_notificacao_mediano": 5.2,
+          "tempo_encerramento_mediano": 46.0,
+          "cv_semanal": 1.784760905249108,
+          "prop_zika": 0.008706743566992014
+        },
+        "zscores": {
+          "log_notificacoes_semana": -0.140315566768015,
+          "prop_chikungunya": -1.2322895814625208,
+          "taxa_hospitalizacao": -0.17937104384142605,
+          "idade_media": 0.4798861045163293,
+          "dispersao_territorial": 0.13519050466648516,
+          "crescimento_24_25": 2.3319181705127807,
+          "taxa_confirmacao": -0.04262347526560473,
+          "completude_registro": 0.1134620169028961,
+          "atraso_notificacao_mediano": -0.16359084892232087,
+          "tempo_encerramento_mediano": -0.047241897786620426,
+          "cv_semanal": -0.10434414021254765,
+          "prop_zika": -0.5112710221167823
+        },
+        "descricao": "↑ crescimento_24_25, ↓ prop_chikungunya, ↑ idade_media"
+      },
+      {
+        "cluster_kmeans": 7,
+        "nome": "Cluster 7 · Abrangência local",
+        "n_unidades": 4,
+        "n_notificacoes": 844,
+        "unidades": [
+          "2752824",
+          "7563736",
+          "7890370",
+          "9384324"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 0.5043854270603875,
+          "prop_chikungunya": 0.43652309629131425,
+          "taxa_hospitalizacao": 0.012812570398738454,
+          "idade_media": 32.945258168443075,
+          "dispersao_territorial": 0.14910064201235756,
+          "crescimento_24_25": 1.3952097721101269,
+          "taxa_confirmacao": 0.413018484506184,
+          "completude_registro": 0.4205878193686352,
+          "atraso_notificacao_mediano": 4.625,
+          "tempo_encerramento_mediano": 38.625,
+          "cv_semanal": 2.7241430344481397,
+          "prop_zika": 0.06899888765294772
+        },
+        "zscores": {
+          "log_notificacoes_semana": -0.7041030795728049,
+          "prop_chikungunya": 1.3011428791404476,
+          "taxa_hospitalizacao": -0.6403581509765643,
+          "idade_media": 0.2842778943806865,
+          "dispersao_territorial": -2.5059477984465888,
+          "crescimento_24_25": 0.17485007695881483,
+          "taxa_confirmacao": 0.29205807368848524,
+          "completude_registro": -0.5207519750028881,
+          "atraso_notificacao_mediano": -0.36061834095207534,
+          "tempo_encerramento_mediano": -0.6472796134236283,
+          "cv_semanal": 1.1679529014118488,
+          "prop_zika": 0.23273243491251094
+        },
+        "descricao": "↓ dispersao_territorial, ↑ prop_chikungunya, ↓ log_notificacoes_semana"
+      },
+      {
+        "cluster_kmeans": 8,
+        "nome": "Cluster 8 · Notificação recente (2024–25)",
+        "n_unidades": 2,
+        "n_notificacoes": 455,
+        "unidades": [
+          "0000779",
+          "6468918"
+        ],
+        "medias": {
+          "log_notificacoes_semana": 0.7080940299780378,
+          "prop_chikungunya": 0.512,
+          "taxa_hospitalizacao": 0.06110074626865672,
+          "idade_media": 34.70843849453438,
+          "dispersao_territorial": 0.7600403890959723,
+          "crescimento_24_25": 4.15412417975092,
+          "taxa_confirmacao": 0.24024242424242426,
+          "completude_registro": 0.2935151515151515,
+          "atraso_notificacao_mediano": 11.5,
+          "tempo_encerramento_mediano": 52.0,
+          "cv_semanal": 2.2259250883013726,
+          "prop_zika": 0.05503030303030303
+        },
+        "zscores": {
+          "log_notificacoes_semana": -0.41936189657689915,
+          "prop_chikungunya": 1.8051399527930356,
+          "taxa_hospitalizacao": -0.45489450573483925,
+          "idade_media": 0.49871437762845017,
+          "dispersao_territorial": 0.6397421696560985,
+          "crescimento_24_25": 2.4889571136100566,
+          "taxa_confirmacao": -0.8173012826899704,
+          "completude_registro": -1.0222806324095592,
+          "atraso_notificacao_mediano": 1.9951451507080333,
+          "tempo_encerramento_mediano": 0.44092437934179274,
+          "cv_semanal": 0.49316763643433004,
+          "prop_zika": 0.060360471589436526
+        },
+        "descricao": "↑ crescimento_24_25, ↑ prop_chikungunya, ↑ dispersao_territorial"
+      }
+    ]
+  }
+}

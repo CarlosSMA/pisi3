@@ -79,6 +79,19 @@ treino com pelo menos uma notificação (hoje 2, 4 e 8 notificações). Ela **n�
 vem de clusterização. `metricas_carga.json` traz os limiares, a acurácia e a
 matriz de confusão entre faixa observada e faixa prevista.
 
+Para executar a clusterização das unidades de saúde (detalhada abaixo):
+
+```bash
+python ml/clusterizar.py
+```
+
+| Flag | Padrão | Descrição |
+| --- | --- | --- |
+| `--dados CAMINHO` | `data/dados_tratados` | Diretório com os dados tratados. |
+| `--saida CAMINHO` | `resultados_clusterizacao` | Pasta para CSVs, JSON e gráficos. |
+| `--min-notificacoes N` | `30` | Mínimo de notificações para uma unidade ser agrupada. |
+| `--anos ANO [ANO ...]` | todos | Anos considerados, ex.: `--anos 2023 2024 2025`. |
+
 ## 🩹 Qualidade dos dados: códigos das unidades de saúde
 
 Nos arquivos `dengue-2022.csv` e `dengue-2023.csv` o código CNES da unidade
@@ -86,6 +99,57 @@ perdeu os zeros à esquerda ("604" em vez de "0000604"). Assim a mesma unidade
 aparecia como duas entidades, e a série de cada uma parecia começar ou terminar
 na virada de 2023 para 2024. O carregamento (`normalizar_codigo_unidade`, em
 `ml/data.py`) agora padroniza todos os códigos com 7 dígitos.
+
+## 🧬 Clusterização das unidades de saúde
+
+Código: `ml/clustering.py` (pipeline), `ml/clustering_plots.py` (gráficos) e
+`ml/clusterizar.py` (execução).
+
+### O que é agrupado
+
+Cada linha é **uma unidade de saúde notificadora (código CNES)** com pelo menos
+30 notificações entre 2022 e 2025: **62 de 453 unidades**, que somam **95% das
+notificações**. Cada unidade é descrita por indicadores agregados. Pacientes e
+casos individuais **não** são agrupados nem classificados.
+
+### Variáveis
+
+**Ativas** (entram na distância). Cada uma representa uma dimensão diferente do
+perfil da unidade, e elas são pouco correlacionadas entre si:
+
+| Variável | Significado |
+| --- | --- |
+| `log_notificacoes_semana` | Volume: log(1 + notificações por semana) |
+| `prop_chikungunya` | Proporção das notificações que são de chikungunya |
+| `taxa_hospitalizacao` | Proporção de hospitalizados (entre registros com o campo informado) |
+| `idade_media` | Idade média dos pacientes notificados |
+| `dispersao_territorial` | Entropia normalizada dos bairros de residência (0 = um só bairro; 1 = uniforme) |
+| `crescimento_24_25` | log((notificações 2024–25 + 1) / (notificações 2022–23 + 1)) |
+
+**Ilustrativas** (só descrevem os clusters): `taxa_confirmacao`,
+`completude_registro`, `atraso_notificacao_mediano`,
+`tempo_encerramento_mediano`, `cv_semanal` e `prop_zika`. Elas medem o processo
+de notificação e registro, e não o perfil da unidade, ou são redundantes
+(`cv_semanal` tem r = −0,55 com o volume). A comparação entre usar só as
+ativas e usar as 12 variáveis fica registrada em `selecao_variaveis` no JSON.
+
+**Excluídas:** `caso_grave` (14 casos) e `obito` (7 casos), raros demais para
+diferenciar unidades; `prop_dengue`, que é o complemento de chikungunya + zika.
+Não há variáveis categóricas, então a distância euclidiana é adequada.
+
+### Algoritmos e escolha de parâmetros
+
+| Algoritmo | Como os parâmetros foram escolhidos | Resultado |
+| --- | --- | --- |
+| **K-Means** | k de 2 a 10. Critério: maior silhueta. Apoio: cotovelo e estabilidade (ARI médio em 30 subamostras de 80%) | **k = 8**, silhueta 0,28, estabilidade 0,62 |
+
+### Arquivos gerados (`resultados_clusterizacao/`)
+
+| Arquivo | Conteúdo |
+| --- | --- |
+| `perfil_unidades.csv` | Variáveis e rótulos do K-Means por unidade |
+| `metricas_clusterizacao.json` | Relatório completo: variáveis, pré-processamento, buscas de parâmetros, comparações e perfis dos clusters |
+| `graficos/*.png` | Gráficos numerados na ordem da análise |
 
 ## Conversão dos dados tratados para Parquet
 
