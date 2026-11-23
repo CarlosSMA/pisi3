@@ -156,16 +156,50 @@ com ≥ 80% da variância acumulada**: **4 componentes, 82,9%**. Os algoritmos
 rodam nesse espaço. A partição do K-Means no espaço PCA é praticamente a mesma
 do espaço completo (ARI = 0,79). O t-SNE é usado **apenas para visualização**.
 
-Os dois primeiros componentes são os eixos dos gráficos `07_kmeans_clusters_pca`
-e `08_hdbscan_clusters_pca`, nomeados pelas variáveis de maior carga:
+#### O que representam os eixos dos gráficos de clusters
 
-- **PC1 (26%)**: para a direita, mais hospitalização e % chikungunya e menos
-  volume de notificações;
-- **PC2 (24%)**: para cima, mais dispersão territorial e menos idade média e %
-  chikungunya.
+Os gráficos `07_kmeans_clusters_pca` e `08_hdbscan_clusters_pca` usam os dois
+primeiros componentes da PCA como eixos. Cada componente é uma combinação das
+variáveis ativas; o peso (carga) de cada variável indica quanto ela empurra a
+unidade para um lado ou para o outro do eixo.
 
-A variância e as cargas de todos os componentes ficam em
+**Eixo horizontal — Componente 1: hospitalização × volume de notificações**
+(26% da variância)
+
+| Variável | Carga | Efeito |
+| --- | --- | --- |
+| Hospitalização | +0,66 | puxa para a direita |
+| % chikungunya | +0,45 | puxa para a direita |
+| Volume de notificações | −0,51 | puxa para a esquerda |
+
+À direita ficam unidades com muitas internações, mais chikungunya e poucas
+notificações (o perfil hospitalar); à esquerda, as grandes notificadoras, com
+pouca hospitalização.
+
+**Eixo vertical — Componente 2: dispersão territorial × idade média**
+(24% da variância)
+
+| Variável | Carga | Efeito |
+| --- | --- | --- |
+| Dispersão territorial | +0,67 | puxa para cima |
+| Hospitalização | +0,35 | puxa para cima |
+| Idade média | −0,48 | puxa para baixo |
+| % chikungunya | −0,43 | puxa para baixo |
+
+No alto ficam unidades que atendem pacientes de muitos bairros e mais jovens
+(o perfil pediátrico); embaixo, unidades de abrangência local, com pacientes
+mais velhos.
+
+As tabelas listam só as variáveis com carga de pelo menos 0,3 em módulo; as
+demais têm pouco peso no eixo. O agrupamento usa os 4 componentes retidos; os
+gráficos mostram só os dois primeiros (50% da variância), por isso alguns
+clusters parecem se sobrepor. A
+variância e as cargas de todos os componentes ficam em
 `metricas_clusterizacao.json`.
+
+No gráfico `10_tsne_clusters`, os eixos (dimensões 1 e 2 do t-SNE) **não
+correspondem a variáveis**: o t-SNE só posiciona perto as unidades parecidas.
+Por isso ele serve apenas para visualizar a separação dos clusters.
 
 ### Algoritmos e escolha de parâmetros
 
