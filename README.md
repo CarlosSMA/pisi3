@@ -152,10 +152,20 @@ Não há variáveis categóricas, então a distância euclidiana é adequada.
 ### Redução de dimensionalidade
 
 PCA sobre as variáveis padronizadas, mantendo o **menor número de componentes
-com ≥ 80% da variância acumulada**: **4 componentes, 82,9%** (gráficos
-`02_pca_variancia` e `03_pca_cargas`). Os algoritmos rodam nesse espaço. A
-partição do K-Means no espaço PCA é praticamente a mesma do espaço completo
-(ARI = 0,79). O t-SNE é usado **apenas para visualização**.
+com ≥ 80% da variância acumulada**: **4 componentes, 82,9%**. Os algoritmos
+rodam nesse espaço. A partição do K-Means no espaço PCA é praticamente a mesma
+do espaço completo (ARI = 0,79). O t-SNE é usado **apenas para visualização**.
+
+Os dois primeiros componentes são os eixos dos gráficos `07_kmeans_clusters_pca`
+e `08_hdbscan_clusters_pca`, nomeados pelas variáveis de maior carga:
+
+- **PC1 (26%)**: para a direita, mais hospitalização e % chikungunya e menos
+  volume de notificações;
+- **PC2 (24%)**: para cima, mais dispersão territorial e menos idade média e %
+  chikungunya.
+
+A variância e as cargas de todos os componentes ficam em
+`metricas_clusterizacao.json`.
 
 ### Algoritmos e escolha de parâmetros
 
@@ -183,7 +193,7 @@ algum grupo.
 | 5 · Perfil pediátrico | 6 | 4.204 | 23,4 | 9,9 | 0,77 | 2,4 |
 
 O nome de cada cluster é gerado automaticamente a partir da variável ativa com
-maior |z-score| médio (gráfico `11_perfil_clusters`).
+maior |z-score| médio (perfis completos em `metricas_clusterizacao.json`).
 
 ### Ressalvas
 

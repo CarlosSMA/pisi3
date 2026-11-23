@@ -1,7 +1,7 @@
 """Gráficos da clusterização das unidades de saúde.
 
 Os arquivos são numerados na ordem da
-análise: variáveis → PCA → K-Means → HDBSCAN/DBSCAN → visualização → perfis.
+análise: K-Means → HDBSCAN/DBSCAN → visualização.
 """
 
 from __future__ import annotations
@@ -10,14 +10,11 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import pandas as pd
 
 if __package__:
-    from .clustering import ROTULO_RUIDO, TODAS_FEATURES, ResultadoClusterizacao
-    from .config import CLUSTER_FEATURES, PCA_VARIANCIA_MINIMA
+    from .clustering import ROTULO_RUIDO, ResultadoClusterizacao
 else:
-    from clustering import ROTULO_RUIDO, TODAS_FEATURES, ResultadoClusterizacao
-    from config import CLUSTER_FEATURES, PCA_VARIANCIA_MINIMA
+    from clustering import ROTULO_RUIDO, ResultadoClusterizacao
 
 # Paleta categórica em ordem fixa (nunca reciclada). Acima de três cores num
 # mesmo gráfico de dispersão algumas se confundem (laranja × rosa, e mais ainda
@@ -31,7 +28,16 @@ TINTA = "#0b0b0b"
 TINTA_SECUNDARIA = "#52514e"
 GRADE = "#e1e0d9"
 EIXO = "#c3c2b7"
-DIVERGENTE = ["#184f95", "#3987e5", "#9ec5f4", "#f0efec", "#f4a9a8", "#e34948", "#9e2b2a"]
+
+# Nomes legíveis das variáveis ativas, usados para descrever os eixos da PCA.
+NOMES_VARIAVEIS = {
+    "log_notificacoes_semana": "volume de notificações",
+    "prop_chikungunya": "% chikungunya",
+    "taxa_hospitalizacao": "hospitalização",
+    "idade_media": "idade média",
+    "dispersao_territorial": "dispersão territorial",
+    "crescimento_24_25": "crescimento 2024–25",
+}
 
 
 def _pyplot():
@@ -62,86 +68,40 @@ def _salvar(figura, destino: Path) -> Path:
     return destino
 
 
-def _mapa_divergente():
-    from matplotlib.colors import LinearSegmentedColormap
-
-    return LinearSegmentedColormap.from_list("divergente", DIVERGENTE)
-
-
-def _heatmap(eixo, valores: pd.DataFrame, limite: float, formato: str = "{:.2f}"):
-    imagem = eixo.imshow(valores.to_numpy(dtype=float), cmap=_mapa_divergente(),
-                         vmin=-limite, vmax=limite, aspect="auto")
-    eixo.set_xticks(range(valores.shape[1]), valores.columns, rotation=40, ha="right")
-    eixo.set_yticks(range(valores.shape[0]), valores.index)
-    eixo.tick_params(length=0)
-    for spine in eixo.spines.values():
-        spine.set_visible(False)
-    for (i, j), valor in np.ndenumerate(valores.to_numpy(dtype=float)):
-        if np.isnan(valor):
-            continue
-        cor = "#ffffff" if abs(valor) > limite * .6 else TINTA
-        eixo.text(j, i, formato.format(valor), ha="center", va="center", fontsize=8, color=cor)
-    return imagem
+def _juntar(nomes: list[str]) -> str:
+    """["a", "b", "c"] → "a, b e c"."""
+    return nomes[0] if len(nomes) == 1 else ", ".join(nomes[:-1]) + " e " + nomes[-1]
 
 
-def _separador_ativas(eixo, vertical: bool = True) -> None:
-    """Linha entre as variáveis ativas e as ilustrativas."""
-    posicao = len(CLUSTER_FEATURES) - .5
-    (eixo.axvline if vertical else eixo.axhline)(posicao, color=TINTA, linewidth=1.5)
+def _rotulo_componente(
+    resultado: ResultadoClusterizacao, indice: int, sentido: str,
+    quebrar: bool = False, maximo: int = 3, carga_minima: float = .3,
+) -> str:
+    """Descreve um eixo da PCA pelas variáveis de maior carga no componente.
+
+    Cargas positivas aumentam no sentido do eixo; negativas diminuem. Ex.:
+    "PC1 (26% da variância) — para a direita: mais hospitalização e %
+    chikungunya, menos volume de notificações".
+    """
+    pca = resultado.relatorio["pca"]
+    cargas = pca["cargas"][f"PC{indice + 1}"]
+    principais = sorted(cargas.items(), key=lambda item: abs(item[1]), reverse=True)[:maximo]
+    principais = [(variavel, carga) for variavel, carga in principais if abs(carga) >= carga_minima]
+    mais = [NOMES_VARIAVEIS.get(v, v) for v, carga in principais if carga > 0]
+    menos = [NOMES_VARIAVEIS.get(v, v) for v, carga in principais if carga < 0]
+    partes = ([f"mais {_juntar(mais)}"] if mais else []) + ([f"menos {_juntar(menos)}"] if menos else [])
+    cabecalho = f"PC{indice + 1} ({pca['variancia_por_componente'][indice]:.0%} da variância)"
+    if quebrar:
+        return f"{cabecalho}\n{sentido}: " + ",\n".join(partes)
+    return f"{cabecalho} — {sentido}: " + ", ".join(partes)
+
+
+def _eixos_pca(eixo, resultado: ResultadoClusterizacao) -> None:
+    eixo.set_xlabel(_rotulo_componente(resultado, 0, "para a direita"))
+    eixo.set_ylabel(_rotulo_componente(resultado, 1, "para cima", quebrar=True))
 
 
 # ---------------------------------------------------------------------------
-
-def grafico_correlacao(resultado: ResultadoClusterizacao, destino: Path) -> Path:
-    plt = _pyplot()
-    correlacao = resultado.perfil[TODAS_FEATURES].corr()
-    figura, eixo = plt.subplots(figsize=(11, 9))
-    imagem = _heatmap(eixo, correlacao, 1.0)
-    _separador_ativas(eixo, vertical=True)
-    _separador_ativas(eixo, vertical=False)
-    figura.colorbar(imagem, ax=eixo, shrink=.7, label="Correlação de Pearson")
-    eixo.set_title("Correlação entre as variáveis por unidade de saúde\n"
-                   "(acima/à esquerda da linha: ativas; abaixo/à direita: ilustrativas)")
-    return _salvar(figura, destino)
-
-
-def grafico_pca_variancia(resultado: ResultadoClusterizacao, destino: Path) -> Path:
-    plt = _pyplot()
-    pca = resultado.relatorio["pca"]
-    individual = np.array(pca["variancia_por_componente"]) * 100
-    acumulada = np.array(pca["variancia_acumulada"]) * 100
-    n = pca["n_componentes"]
-    posicoes = np.arange(1, len(individual) + 1)
-    figura, eixo = plt.subplots(figsize=(10, 6))
-    cores = [CORES[0] if i <= n else CINZA for i in posicoes]
-    eixo.bar(posicoes, individual, color=cores, width=.6, label="Variância do componente")
-    eixo.plot(posicoes, acumulada, marker="o", color=TINTA, markersize=6, label="Variância acumulada")
-    eixo.axhline(PCA_VARIANCIA_MINIMA * 100, color=TINTA_SECUNDARIA, linestyle="--", linewidth=1)
-    eixo.text(len(posicoes) + .4, PCA_VARIANCIA_MINIMA * 100 + 1.5,
-              f"critério: {PCA_VARIANCIA_MINIMA:.0%}", ha="right", color=TINTA_SECUNDARIA)
-    eixo.annotate(f"{n} componentes retidos\n{acumulada[n - 1]:.1f}% da variância",
-                  xy=(n, acumulada[n - 1]), xytext=(n + .6, acumulada[n - 1] - 22),
-                  arrowprops={"arrowstyle": "-", "color": TINTA_SECUNDARIA}, color=TINTA)
-    eixo.set(xticks=posicoes, xticklabels=[f"PC{i}" for i in posicoes], ylim=(0, 105),
-             ylabel="Variância explicada (%)",
-             title=f"PCA sobre as {len(CLUSTER_FEATURES)} variáveis ativas padronizadas")
-    eixo.grid(axis="y")
-    eixo.legend(loc="center right")
-    return _salvar(figura, destino)
-
-
-def grafico_pca_cargas(resultado: ResultadoClusterizacao, destino: Path) -> Path:
-    plt = _pyplot()
-    cargas = pd.DataFrame(resultado.relatorio["pca"]["cargas"])
-    variancia = resultado.relatorio["pca"]["variancia_por_componente"]
-    cargas.columns = [f"{c}\n({variancia[i]:.0%})" for i, c in enumerate(cargas.columns)]
-    figura, eixo = plt.subplots(figsize=(8, 6))
-    imagem = _heatmap(eixo, cargas, 1.0)
-    eixo.set_xticks(range(cargas.shape[1]), cargas.columns, rotation=0, ha="center")
-    figura.colorbar(imagem, ax=eixo, shrink=.8, label="Carga (peso da variável no componente)")
-    eixo.set_title("Cargas da PCA: o que cada componente representa")
-    return _salvar(figura, destino)
-
 
 def grafico_cotovelo(resultado: ResultadoClusterizacao, destino: Path) -> Path:
     plt = _pyplot()
@@ -158,31 +118,6 @@ def grafico_cotovelo(resultado: ResultadoClusterizacao, destino: Path) -> Path:
     eixo.set(xticks=ks, xlabel="Número de clusters (k)", ylabel="Inércia (soma das distâncias² ao centróide)",
              title="Método do cotovelo")
     eixo.grid(axis="y")
-    return _salvar(figura, destino)
-
-
-def grafico_silhueta_por_k(resultado: ResultadoClusterizacao, destino: Path) -> Path:
-    plt = _pyplot()
-    por_k = resultado.relatorio["kmeans"]["por_k"]
-    ks = [int(k) for k in por_k]
-    silhueta = [por_k[str(k)]["silhueta"] for k in ks]
-    estabilidade = [por_k[str(k)]["estabilidade_ari"] for k in ks]
-    escolhido = resultado.relatorio["kmeans"]["k_selecionado"]
-    figura, eixo = plt.subplots(figsize=(10, 6))
-    eixo.plot(ks, silhueta, marker="o", color=CORES[0], markersize=7, label="Silhueta (critério)")
-    eixo.plot(ks, estabilidade, marker="s", color=CORES[1], markersize=7,
-              label="Estabilidade (ARI em subamostras)")
-    eixo.axvline(escolhido, color=TINTA_SECUNDARIA, linestyle="--", linewidth=1)
-    i = ks.index(escolhido)
-    eixo.annotate(f"k = {escolhido}\nsilhueta {silhueta[i]:.2f}\nestabilidade {estabilidade[i]:.2f}",
-                  xy=(escolhido, silhueta[i]), xytext=(10, -50), textcoords="offset points", color=TINTA)
-    eixo.text(ks[-1], silhueta[-1], "  silhueta", va="center", color=TINTA_SECUNDARIA)
-    eixo.text(ks[-1], estabilidade[-1], "  estabilidade", va="center", color=TINTA_SECUNDARIA)
-    eixo.set(xticks=ks, xlim=(ks[0] - .3, ks[-1] + 1.3), ylim=(0, 1),
-             xlabel="Número de clusters (k)", ylabel="Índice (0 a 1)",
-             title="Escolha de k: maior silhueta, conferida pela estabilidade")
-    eixo.grid(axis="y")
-    eixo.legend(loc="upper left")
     return _salvar(figura, destino)
 
 
@@ -246,7 +181,6 @@ def grafico_kmeans_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path
     """Todos os clusters do K-Means num único plano PC1 × PC2."""
     plt = _pyplot()
     perfil = resultado.perfil
-    variancia = resultado.relatorio["pca"]["variancia_por_componente"]
     n = resultado.relatorio["pca"]["n_componentes"]
     figura, eixo = plt.subplots(figsize=(12, 7.5))
     for posicao, cluster in enumerate(sorted(perfil["cluster_kmeans"].unique())):
@@ -262,8 +196,8 @@ def grafico_kmeans_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path
                       textcoords="offset points", fontsize=10, fontweight="bold", color=TINTA, zorder=5,
                       bbox={"boxstyle": "round,pad=0.25", "facecolor": SUPERFICIE, "edgecolor": GRADE,
                             "alpha": .7})
-    eixo.set(xlabel=f"PC1 ({variancia[0]:.0%} da variância)", ylabel=f"PC2 ({variancia[1]:.0%} da variância)",
-             title="Clusters do K-Means no plano PC1 × PC2")
+    _eixos_pca(eixo, resultado)
+    eixo.set_title("Clusters do K-Means nos dois primeiros componentes da PCA")
     eixo.text(0, 1.01, f"Marcador grande com contorno = centróide do cluster. O agrupamento usa os {n} "
                        "componentes retidos;\naqui aparecem só os dois primeiros, por isso alguns clusters "
                        "se sobrepõem.", transform=eixo.transAxes, fontsize=9, color=TINTA_SECUNDARIA,
@@ -277,9 +211,8 @@ def grafico_kmeans_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path
 def grafico_hdbscan_pca(resultado: ResultadoClusterizacao, destino: Path) -> Path:
     plt = _pyplot()
     perfil = resultado.perfil
-    variancia = resultado.relatorio["pca"]["variancia_por_componente"]
     selecionado = resultado.relatorio["hdbscan"]["selecionado"]
-    figura, eixo = plt.subplots(figsize=(10, 7))
+    figura, eixo = plt.subplots(figsize=(12, 7.5))
     ruido = perfil["cluster_hdbscan"].eq(ROTULO_RUIDO)
     eixo.scatter(perfil.loc[ruido, "pc1"], perfil.loc[ruido, "pc2"], s=60, marker="x",
                  color=TINTA_SECUNDARIA, label=f"Atípicas / ruído ({ruido.sum()})")
@@ -290,8 +223,8 @@ def grafico_hdbscan_pca(resultado: ResultadoClusterizacao, destino: Path) -> Pat
                      s=30 + 70 * perfil.loc[selecao, "prob_hdbscan"], color=CORES[posicao],
                      edgecolors=SUPERFICIE, linewidths=1.5, label=f"{nome} ({selecao.sum()})")
     n = resultado.relatorio["pca"]["n_componentes"]
-    eixo.set(xlabel=f"PC1 ({variancia[0]:.0%})", ylabel=f"PC2 ({variancia[1]:.0%})",
-             title=f"HDBSCAN (min_cluster_size={selecionado['min_cluster_size']}, "
+    _eixos_pca(eixo, resultado)
+    eixo.set_title(f"HDBSCAN (min_cluster_size={selecionado['min_cluster_size']}, "
                    f"min_samples={selecionado['min_samples']})")
     eixo.text(0, 1.01, f"Tamanho do ponto = probabilidade de pertencer ao cluster. O agrupamento usa os "
                        f"{n} componentes retidos;\nunidades atípicas no meio da nuvem se afastam nos "
@@ -299,7 +232,7 @@ def grafico_hdbscan_pca(resultado: ResultadoClusterizacao, destino: Path) -> Pat
               color=TINTA_SECUNDARIA, va="bottom")
     eixo.set_title(eixo.get_title(loc="left"), loc="left", pad=34)
     eixo.grid(True)
-    eixo.legend(loc="best")
+    eixo.legend(loc="upper left", bbox_to_anchor=(1.01, 1), borderaxespad=0)
     return _salvar(figura, destino)
 
 
@@ -337,38 +270,15 @@ def grafico_tsne(resultado: ResultadoClusterizacao, destino: Path) -> Path:
     )
 
 
-def grafico_perfil(resultado: ResultadoClusterizacao, destino: Path) -> Path:
-    plt = _pyplot()
-    perfis = resultado.relatorio["perfis"]["kmeans"]
-    tabela = pd.DataFrame(
-        {f"{p['nome']} ({p['n_unidades']})": p["zscores"] for p in perfis}
-    ).T[TODAS_FEATURES].astype(float)
-    limite = max(1.5, float(np.nanmax(np.abs(tabela.to_numpy()))))
-    figura, eixo = plt.subplots(figsize=(13, 1.2 + .7 * len(tabela)))
-    imagem = _heatmap(eixo, tabela, limite, "{:+.1f}")
-    _separador_ativas(eixo, vertical=True)
-    eixo.text(len(CLUSTER_FEATURES) / 2 - .5, -0.8, "variáveis ativas", ha="center", color=TINTA)
-    eixo.text(len(CLUSTER_FEATURES) + len(TODAS_FEATURES[len(CLUSTER_FEATURES):]) / 2 - .5, -0.8,
-              "variáveis ilustrativas", ha="center", color=TINTA_SECUNDARIA)
-    figura.colorbar(imagem, ax=eixo, shrink=.9, label="z-score médio (0 = média das unidades)")
-    eixo.set_title("Perfil de cada cluster do K-Means", pad=24)
-    return _salvar(figura, destino)
-
-
 def gerar_graficos_clusterizacao(resultado: ResultadoClusterizacao, pasta: str | Path) -> list[Path]:
     pasta = Path(pasta)
     pasta.mkdir(parents=True, exist_ok=True)
     funcoes: dict[str, Any] = {
-        "01_correlacao_variaveis.png": grafico_correlacao,
-        "02_pca_variancia.png": grafico_pca_variancia,
-        "03_pca_cargas.png": grafico_pca_cargas,
         "04_kmeans_cotovelo.png": grafico_cotovelo,
-        "05_kmeans_silhueta_por_k.png": grafico_silhueta_por_k,
         "06_kmeans_diagrama_silhueta.png": grafico_diagrama_silhueta,
         "07_kmeans_clusters_pca.png": grafico_kmeans_pca,
         "08_hdbscan_clusters_pca.png": grafico_hdbscan_pca,
         "09_dbscan_k_distancia.png": grafico_k_distancia,
         "10_tsne_clusters.png": grafico_tsne,
-        "11_perfil_clusters.png": grafico_perfil,
     }
     return [funcao(resultado, pasta / nome) for nome, funcao in funcoes.items()]
